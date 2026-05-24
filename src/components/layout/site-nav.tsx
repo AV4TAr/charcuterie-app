@@ -1,10 +1,17 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/routing";
+import { createClient } from "@/lib/supabase/server";
 import { LocaleSwitcher } from "./locale-switcher";
 
-export function SiteNav() {
-  const t = useTranslations("nav");
-  const tApp = useTranslations("app");
+export async function SiteNav() {
+  const t = await getTranslations("nav");
+  const tAuth = await getTranslations("auth");
+  const tApp = await getTranslations("app");
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur sticky top-0 z-10">
@@ -28,12 +35,29 @@ export function SiteNav() {
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <LocaleSwitcher />
-          <Link
-            href="/login"
-            className="text-sm text-zinc-400 hover:text-zinc-100 transition"
-          >
-            {t("login")}
-          </Link>
+          {user ? (
+            <form action="/auth/logout" method="post" className="flex items-center gap-3">
+              <span
+                className="hidden sm:inline text-xs text-zinc-500 truncate max-w-[160px]"
+                title={user.email ?? ""}
+              >
+                {user.email}
+              </span>
+              <button
+                type="submit"
+                className="text-sm text-zinc-400 hover:text-zinc-100 transition"
+              >
+                {tAuth("signOut")}
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm text-zinc-400 hover:text-zinc-100 transition"
+            >
+              {t("login")}
+            </Link>
+          )}
         </div>
       </div>
     </header>

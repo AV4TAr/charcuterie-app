@@ -49,5 +49,17 @@
   },
   "errors": {
     "comingSoon": "Próximamente"
+  },
+  "auth": {
+    "signIn": "Ingresar",
+    "magicLinkSubtitle": "Te mandamos un link mágico por email. No hace falta contraseña.",
+    "email": "Email",
+    "sendMagicLink": "Enviar link mágico",
+    "sending": "Enviando…",
+    "checkEmail": "Te enviamos un link mágico a {email}. Revisá tu casilla para terminar de ingresar.",
+    "signOut": "Salir",
+    "signedInAs": "Ingresaste como {email}",
+    "errorOccurred": "Algo salió mal. Probá de nuevo.",
+    "callbackError": "No pudimos completar el ingreso. El link puede haber expirado — probá de nuevo."
   }
 }

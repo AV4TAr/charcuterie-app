@@ -49,5 +49,17 @@
   },
   "errors": {
     "comingSoon": "Coming soon"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "magicLinkSubtitle": "We'll email you a magic link. No password needed.",
+    "email": "Email",
+    "sendMagicLink": "Send magic link",
+    "sending": "Sending…",
+    "checkEmail": "Check your inbox at {email} for a magic link to finish signing in.",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {email}",
+    "errorOccurred": "Something went wrong. Try again.",
+    "callbackError": "Could not complete sign in. The link may have expired — try again."
   }
 }

@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "Chorizo Lab",
+    "tagline": "Chorizo and sausage recipes with automatic scaling"
+  },
+  "nav": {
+    "home": "Home",
+    "explore": "Explore",
+    "newRecipe": "New recipe",
+    "favorites": "Favorites",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "home": {
+    "heroTitle": "Your chorizo recipes, scaled to the gram (and the pound)",
+    "heroSubtitle": "Enter the recipe once. Then scale automatically to any amount of meat, in any unit: g, kg, oz, lb, ml, l, fl oz, cups, tablespoons and more.",
+    "ctaTry": "Try the calculator",
+    "ctaNew": "Create recipe",
+    "featuresTitle": "What can you do?",
+    "features": {
+      "calculate": "Instant ingredient scaling from meat weight",
+      "calculateDesc": "Mark ingredients as % of the meat weight or use absolute amounts (g, oz, ml, fl oz, cm, pieces).",
+      "version": "Version recipes with change notes",
+      "versionDesc": "Each time you tweak something you save a new numbered version with your note. Never lose an iteration.",
+      "share": "Public, private, forks and proposals",
+      "shareDesc": "Share recipes, fork your friend's to experiment, and propose changes back like on GitHub.",
+      "social": "Favorites, ratings, comments and cooking tips",
+      "socialDesc": "The community rates and shares cooking tips for every recipe."
+    }
+  },
+  "calculator": {
+    "title": "Calculator",
+    "meatWeight": "Meat weight",
+    "ingredient": "Ingredient",
+    "amount": "Amount",
+    "percentMode": "% of meat weight",
+    "absoluteMode": "Absolute amount",
+    "totalMass": "Estimated total weight",
+    "demoTitle": "Try the calculator",
+    "demoIntro": "Change the meat weight (in kg, lb, oz or g) and watch each ingredient recalculate instantly. Each row uses its preferred unit."
+  },
+  "units": {
+    "mass": "Mass",
+    "volume": "Volume",
+    "length": "Length",
+    "count": "Count"
+  },
+  "errors": {
+    "comingSoon": "Coming soon"
+  }
+}

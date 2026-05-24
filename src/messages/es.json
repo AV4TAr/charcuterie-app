@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "Chorizo Lab",
+    "tagline": "Recetas de chorizo y embutidos con cálculos automáticos"
+  },
+  "nav": {
+    "home": "Inicio",
+    "explore": "Explorar",
+    "newRecipe": "Nueva receta",
+    "favorites": "Favoritos",
+    "login": "Ingresar",
+    "logout": "Salir",
+    "profile": "Perfil",
+    "settings": "Configuración"
+  },
+  "home": {
+    "heroTitle": "Tus recetas de chorizo, calculadas al gramo (y a la libra)",
+    "heroSubtitle": "Cargá una receta una sola vez. Después escalá automáticamente para cualquier cantidad de carne, en cualquier unidad: g, kg, oz, lb, ml, l, fl oz, tazas, cucharadas y más.",
+    "ctaTry": "Probar la calculadora",
+    "ctaNew": "Crear receta",
+    "featuresTitle": "¿Qué podés hacer?",
+    "features": {
+      "calculate": "Calcular pesos al instante según la carne disponible",
+      "calculateDesc": "Marcá ingredientes como % del peso de carne o en cantidades absolutas (g, oz, ml, fl oz, cm, unidades).",
+      "version": "Versionar recetas con notas de cambio",
+      "versionDesc": "Cada vez que ajustás algo, guardás una nueva versión con tu comentario. Nunca perdés una iteración.",
+      "share": "Recetas públicas, privadas, forks y proposals",
+      "shareDesc": "Compartí tus recetas, forkeá las de tu amigo para experimentar y proponé cambios al original como en GitHub.",
+      "social": "Favoritos, ratings, comentarios y tips de cocción",
+      "socialDesc": "Toda la comunidad puntúa y comparte tips sobre cada receta."
+    }
+  },
+  "calculator": {
+    "title": "Calculadora",
+    "meatWeight": "Peso de carne",
+    "ingredient": "Ingrediente",
+    "amount": "Cantidad",
+    "percentMode": "% del peso de carne",
+    "absoluteMode": "Cantidad absoluta",
+    "totalMass": "Peso total estimado",
+    "demoTitle": "Probá la calculadora",
+    "demoIntro": "Cambiá el peso de carne (en kg, lb, oz o g) y mirá cómo se recalcula cada ingrediente al instante. Cada fila usa su unidad preferida."
+  },
+  "units": {
+    "mass": "Masa",
+    "volume": "Volumen",
+    "length": "Longitud",
+    "count": "Unidades"
+  },
+  "errors": {
+    "comingSoon": "Próximamente"
+  }
+}

@@ -51,6 +51,8 @@ export default async function ExplorePage({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {recipes.map((r) => {
             const owner = r.profiles as unknown as { username: string; display_name: string | null } | null;
+            const fav = r.favorites_count ?? 0;
+            const avg = Number(r.ratings_avg ?? 0);
             return (
               <Link
                 key={r.id}
@@ -63,9 +65,15 @@ export default async function ExplorePage({
                 {r.description && (
                   <p className="text-sm text-zinc-400 line-clamp-2 mb-3">{r.description}</p>
                 )}
-                <p className="text-xs text-zinc-600">
-                  {tRec("by")} {owner?.display_name ?? owner?.username ?? "—"}
-                </p>
+                <div className="flex items-center justify-between gap-2 mt-2">
+                  <p className="text-xs text-zinc-600">
+                    {tRec("by")} {owner?.display_name ?? owner?.username ?? "—"}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                    {fav > 0 && <span title="favorites">★ {fav}</span>}
+                    {avg > 0 && <span title="rating">{avg.toFixed(1)}/5</span>}
+                  </div>
+                </div>
               </Link>
             );
           })}

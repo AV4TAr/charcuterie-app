@@ -55,6 +55,12 @@
     "emptyHint": "¡Sé el primero en crear una!",
     "createFirst": "Crear receta"
   },
+  "favorites": {
+    "title": "Favoritos",
+    "empty": "Todavía no tenés favoritos",
+    "emptyHint": "Tocá la estrella en cualquier receta para guardarla acá.",
+    "browse": "Explorar recetas"
+  },
   "recipe": {
     "by": "por",
     "title": "Título",
@@ -75,12 +81,19 @@
     "selectIngredient": "Seleccionar ingrediente",
     "changeNote": "Nota de versión",
     "changeNotePlaceholder": "¿Qué cambió? (opcional)",
+    "changeNoteRequired": "Describí qué cambió en esta versión",
     "instructions": "Instrucciones",
     "instructionsPlaceholder": "Pasos, tips, tiempo de curado...",
     "save": "Guardar receta",
     "saving": "Guardando...",
+    "saveVersion": "Guardar nueva versión",
     "noIngredients": "Esta receta no tiene ingredientes todavía",
-    "version": "v{number}"
+    "version": "v{number}",
+    "edit": "Editar",
+    "favorite": "Guardar",
+    "unfavorite": "Quitar",
+    "favoritesCount": "{count} favorito",
+    "favoritesCountPlural": "{count} favoritos"
   },
   "auth": {
     "signIn": "Ingresar",

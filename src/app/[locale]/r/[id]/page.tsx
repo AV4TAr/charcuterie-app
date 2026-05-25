@@ -1,7 +1,9 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Link } from "@/lib/i18n/routing";
 import { WeightCalculator } from "@/components/recipe/weight-calculator";
+import { FavoriteButton } from "@/components/recipe/favorite-button";
 import { fromCanonical } from "@/lib/units";
 import type { Locale } from "@/lib/i18n/config";
 import type { RecipeIngredient } from "@/lib/recipes/calculator";
@@ -16,10 +18,11 @@ export default async function RecipeDetailPage({
   setRequestLocale(locale);
 
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: recipe, error } = await supabase
     .from("recipes")
-    .select("id, title, description, visibility, created_at, profiles!owner_id(username, display_name), current_version_id")
+    .select("id, title, description, visibility, owner_id, favorites_count, created_at, profiles!owner_id(username, display_name), current_version_id")
     .eq("id", id)
     .single();
 
@@ -58,17 +61,47 @@ export default async function RecipeDetailPage({
   const meatUnit = (version.meat_base_display_unit ?? "kg") as MassUnit;
   const initialMeatAmount = fromCanonical(Number(version.meat_base_weight_grams), meatUnit);
   const owner = recipe.profiles as unknown as { username: string; display_name: string | null } | null;
+  const isOwner = user?.id === recipe.owner_id;
+
+  let isFavorited = false;
+  if (user) {
+    const { data: fav } = await supabase
+      .from("favorites")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .eq("recipe_id", recipe.id)
+      .maybeSingle();
+    isFavorited = !!fav;
+  }
 
   const t = await getTranslations("recipe");
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-100">{recipe.title}</h1>
-        {recipe.description && <p className="text-zinc-400 mt-2">{recipe.description}</p>}
-        <p className="text-xs text-zinc-600 mt-2">
-          {t("by")} {owner?.display_name ?? owner?.username ?? "—"} · {t("version", { number: version.version_number })}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-zinc-100">{recipe.title}</h1>
+          {recipe.description && <p className="text-zinc-400 mt-2">{recipe.description}</p>}
+          <p className="text-xs text-zinc-600 mt-2">
+            {t("by")} {owner?.display_name ?? owner?.username ?? "—"} · {t("version", { number: version.version_number })}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <FavoriteButton
+            recipeId={recipe.id}
+            userId={user?.id ?? null}
+            initialIsFavorited={isFavorited}
+            initialCount={recipe.favorites_count ?? 0}
+          />
+          {isOwner && (
+            <Link
+              href={`/r/${recipe.id}/edit`}
+              className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 transition"
+            >
+              {t("edit")}
+            </Link>
+          )}
+        </div>
       </div>
 
       {ingredients.length > 0 ? (

@@ -55,6 +55,12 @@
     "emptyHint": "Be the first to create one!",
     "createFirst": "Create recipe"
   },
+  "favorites": {
+    "title": "Favorites",
+    "empty": "No favorites yet",
+    "emptyHint": "Tap the star on any recipe to save it here.",
+    "browse": "Explore recipes"
+  },
   "recipe": {
     "by": "by",
     "title": "Title",
@@ -75,12 +81,19 @@
     "selectIngredient": "Select ingredient",
     "changeNote": "Version note",
     "changeNotePlaceholder": "What's new? (optional)",
+    "changeNoteRequired": "Describe what changed in this version",
     "instructions": "Instructions",
     "instructionsPlaceholder": "Steps, tips, curing time...",
     "save": "Save recipe",
     "saving": "Saving...",
+    "saveVersion": "Save new version",
     "noIngredients": "This recipe has no ingredients yet",
-    "version": "v{number}"
+    "version": "v{number}",
+    "edit": "Edit",
+    "favorite": "Favorite",
+    "unfavorite": "Unfavorite",
+    "favoritesCount": "{count} favorite",
+    "favoritesCountPlural": "{count} favorites"
   },
   "auth": {
     "signIn": "Sign in",

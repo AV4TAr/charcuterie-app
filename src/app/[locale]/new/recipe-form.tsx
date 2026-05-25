@@ -26,7 +26,7 @@ type Row = {
   displayUnit: string;
 };
 
-type FormValues = {
+export type RecipeFormValues = {
   title: string;
   description: string;
   visibility: "public" | "private";
@@ -35,6 +35,11 @@ type FormValues = {
   changeNote: string;
   instructions: string;
   rows: Row[];
+};
+
+export type EditingContext = {
+  recipeId: string;
+  currentVersionNumber: number;
 };
 
 function slugify(text: string): string {
@@ -47,35 +52,42 @@ function slugify(text: string): string {
     .slice(0, 80);
 }
 
+const EMPTY_DEFAULTS: RecipeFormValues = {
+  title: "",
+  description: "",
+  visibility: "private",
+  meatBaseValue: "1",
+  meatBaseUnit: "kg",
+  changeNote: "",
+  instructions: "",
+  rows: [],
+};
+
 export function RecipeForm({
   locale,
   ingredients,
   userId,
+  editing,
+  initialValues,
 }: {
   locale: string;
   ingredients: DbIngredient[];
   userId: string;
+  editing?: EditingContext;
+  initialValues?: Partial<RecipeFormValues>;
 }) {
   const t = useTranslations("recipe");
   const tUnits = useTranslations("units");
   const router = useRouter();
   const [saveError, setSaveError] = useState("");
+  const isEditing = !!editing;
 
   const firstIng = ingredients[0];
   const defaultUnit = firstIng ? unitsForType(firstIng.measurement_type)[0] : "g";
 
   const { register, control, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } =
-    useForm<FormValues>({
-      defaultValues: {
-        title: "",
-        description: "",
-        visibility: "private",
-        meatBaseValue: "1",
-        meatBaseUnit: "kg",
-        changeNote: "",
-        instructions: "",
-        rows: [],
-      },
+    useForm<RecipeFormValues>({
+      defaultValues: { ...EMPTY_DEFAULTS, ...initialValues, changeNote: isEditing ? "" : (initialValues?.changeNote ?? "") },
     });
 
   const { fields, append, remove } = useFieldArray({ control, name: "rows" });
@@ -94,34 +106,58 @@ export function RecipeForm({
     });
   }
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: RecipeFormValues) {
     setSaveError("");
     const supabase = createClient();
-    const slug = slugify(values.title) + "-" + Math.random().toString(36).slice(2, 6);
 
-    const { data: recipe, error: recipeErr } = await supabase
-      .from("recipes")
-      .insert({
-        owner_id: userId,
-        slug,
-        title: values.title.trim(),
-        description: values.description.trim() || null,
-        visibility: values.visibility,
-      })
-      .select("id")
-      .single();
+    let recipeId: string;
+    let nextVersionNumber: number;
 
-    if (recipeErr || !recipe) {
-      setSaveError(recipeErr?.message ?? "Failed to create recipe");
-      return;
+    if (isEditing && editing) {
+      const { error: updateErr } = await supabase
+        .from("recipes")
+        .update({
+          title: values.title.trim(),
+          description: values.description.trim() || null,
+          visibility: values.visibility,
+        })
+        .eq("id", editing.recipeId)
+        .eq("owner_id", userId);
+
+      if (updateErr) {
+        setSaveError(updateErr.message);
+        return;
+      }
+      recipeId = editing.recipeId;
+      nextVersionNumber = editing.currentVersionNumber + 1;
+    } else {
+      const slug = slugify(values.title) + "-" + Math.random().toString(36).slice(2, 6);
+      const { data: recipe, error: recipeErr } = await supabase
+        .from("recipes")
+        .insert({
+          owner_id: userId,
+          slug,
+          title: values.title.trim(),
+          description: values.description.trim() || null,
+          visibility: values.visibility,
+        })
+        .select("id")
+        .single();
+
+      if (recipeErr || !recipe) {
+        setSaveError(recipeErr?.message ?? "Failed to create recipe");
+        return;
+      }
+      recipeId = recipe.id;
+      nextVersionNumber = 1;
     }
 
     const meatGrams = toCanonical(Number(values.meatBaseValue) || 1000, values.meatBaseUnit);
     const { data: version, error: versionErr } = await supabase
       .from("recipe_versions")
       .insert({
-        recipe_id: recipe.id,
-        version_number: 1,
+        recipe_id: recipeId,
+        version_number: nextVersionNumber,
         change_note: values.changeNote.trim() || null,
         instructions: values.instructions.trim() || null,
         meat_base_weight_grams: meatGrams,
@@ -136,7 +172,7 @@ export function RecipeForm({
       return;
     }
 
-    await supabase.from("recipes").update({ current_version_id: version.id }).eq("id", recipe.id);
+    await supabase.from("recipes").update({ current_version_id: version.id }).eq("id", recipeId);
 
     const validRows = values.rows.filter((r) => r.ingredientId && Number(r.value) > 0);
     if (validRows.length > 0) {
@@ -166,7 +202,8 @@ export function RecipeForm({
       }
     }
 
-    router.push(`/r/${recipe.id}`);
+    router.push(`/r/${recipeId}`);
+    router.refresh();
   }
 
   return (
@@ -315,8 +352,15 @@ export function RecipeForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="changeNote">{t("changeNote")}</Label>
-        <Input id="changeNote" {...register("changeNote")} placeholder={t("changeNotePlaceholder")} />
+        <Label htmlFor="changeNote">
+          {t("changeNote")}{isEditing ? " *" : ""}
+        </Label>
+        <Input
+          id="changeNote"
+          {...register("changeNote", { required: isEditing })}
+          placeholder={isEditing ? t("changeNoteRequired") : t("changeNotePlaceholder")}
+          className={errors.changeNote ? "border-red-500" : ""}
+        />
       </div>
 
       <div className="space-y-2">
@@ -333,7 +377,7 @@ export function RecipeForm({
       {saveError && <p className="text-sm text-red-400">{saveError}</p>}
 
       <Button type="submit" disabled={isSubmitting} className="w-full" size="lg">
-        {isSubmitting ? t("saving") : t("save")}
+        {isSubmitting ? t("saving") : isEditing ? t("saveVersion") : t("save")}
       </Button>
     </form>
   );

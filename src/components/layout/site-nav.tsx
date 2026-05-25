@@ -32,6 +32,11 @@ export async function SiteNav() {
           <Link href="/new" className="hover:text-zinc-100 transition">
             {t("newRecipe")}
           </Link>
+          {user && (
+            <Link href="/favorites" className="hover:text-zinc-100 transition">
+              {t("favorites")}
+            </Link>
+          )}
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <LocaleSwitcher />

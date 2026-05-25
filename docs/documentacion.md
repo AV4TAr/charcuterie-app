@@ -156,23 +156,23 @@ Funcionando en producción:
 
 - Landing bilingüe con calculadora demo (chorizo criollo hardcodeado).
 - Auth magic link end-to-end (login, callback, logout, profile auto-create por trigger).
-- `/explore` listando recetas públicas reales (vacío hasta crear una).
-- `/new` con form completo (título, descripción, visibilidad, peso base, ingredientes dinámicos %/absoluto, instrucciones).
-- `/r/[id]` con detalle y scaler en vivo sobre datos de Supabase.
-- 21 ingredientes seedados con densidades para líquidos.
+- `/explore` listando recetas públicas reales con badges de favoritos y rating.
+- `/new` con form completo: título, descripción, visibilidad, peso base, ingredientes dinámicos %/absoluto, instrucciones. Dropdown de unidades en modo absoluto muestra las 13 unidades agrupadas.
+- `/r/[id]` con detalle, scaler en vivo, botón de favorito (estrella, optimista) y botón Edit visible para el dueño.
+- `/r/[id]/edit` editor de receta existente: crea v2, v3… con `change_note` requerido.
+- `/favorites` lista las recetas marcadas (auth-gated).
+- 21 ingredientes seedados con densidades para líquidos + 5 recetas curadas (chorizo criollo argentino, cantimpalos español, parrillera uruguaya, longaniza catalana, chorizo mexicano) bajo el usuario `chorizolab`.
 - RLS aplicado en todas las tablas.
 
 Pendiente (próximas iteraciones):
 
-- Versionado UI: editar una receta crea v2, v3… con `change_note`.
+- Histórico de versiones visible en UI (lista de v1, v2, v3… con sus change_notes).
+- Diff visual entre versiones.
+- Comments / cooking tips.
+- Ratings UI (1–5 estrellas, schema ya soporta).
 - Forks y proposals UI.
-- Favoritos, ratings, comentarios.
 - Stores y mapa.
-- Custom SMTP en Supabase (Resend) para producción.
-- Verificación de dominio (sapriza.net) para emails.
-- Recetas seedadas de demo (ahora hay catálogo de ingredientes pero no de recetas).
-- Editor de receta (path para v2+ desde la página de detalle).
-- Manejo de unidades cross-type en el form (cucharadas para sólidos, etc.) con densidades por defecto en el catálogo.
+- Custom SMTP (Resend), dominio propio, SEO, analytics.
 
 ## 10. Roadmap por fases
 

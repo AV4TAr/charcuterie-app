@@ -178,6 +178,7 @@ Scaffolding completo: schema (8 tablas + RLS + triggers), calculadora multi-unit
 5. **TypeScript + Supabase joins:** los embedded selects (`profiles!owner_id(...)`) vienen tipados como array genérico. Hay que castear con `as unknown as { ... }` para acceder a los campos.
 6. **Migrations idempotentes:** Supabase corre las migrations en orden cada vez que ve cambios en `supabase/migrations/`. Usar `on conflict do nothing` o `create or replace`.
 7. **El seed de recetas necesita un user en `auth.users`.** Lo creamos con UUID fijo (`00000000-0000-0000-0000-000000000c01`) vía INSERT directo en `auth.users`. El trigger crea el profile automáticamente.
+8. **Triggers que actualizan otras tablas necesitan `SECURITY DEFINER`.** El `bump_favorites_count` y `recalc_rating` corren en el contexto del usuario que insertó la fila en `favorites`/`ratings`, así que cuando intentaban UPDATE sobre `recipes` para una receta ajena, RLS los bloqueaba silenciosamente. La migration `20260524180005_fix_counter_triggers.sql` los re-declara con `security definer` + backfill de los contadores.
 
 ---
 

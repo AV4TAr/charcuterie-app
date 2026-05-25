@@ -158,20 +158,27 @@ Funcionando en producción:
 - Auth magic link end-to-end (login, callback, logout, profile auto-create por trigger).
 - `/explore` listando recetas públicas reales con badges de favoritos y rating.
 - `/new` con form completo: título, descripción, visibilidad, peso base, ingredientes dinámicos %/absoluto, instrucciones. Dropdown de unidades en modo absoluto muestra las 13 unidades agrupadas.
-- `/r/[id]` con detalle, scaler en vivo, botón de favorito (estrella, optimista) y botón Edit visible para el dueño.
+- `/r/[id]` con detalle completo:
+  - Scaler en vivo (cambiá el peso de carne y todo se recalcula)
+  - Botón Favorito (★) con conteo optimista
+  - Rating de 5 estrellas con upsert (un voto por user, avg en vivo)
+  - Botón Edit (solo dueño) o Fork (no-dueño autenticado)
+  - Histórico colapsable de versiones con change_notes
+  - Comentarios threaded de 1 nivel (post + reply)
+  - Lineage "Forkeada de…" cuando aplica
 - `/r/[id]/edit` editor de receta existente: crea v2, v3… con `change_note` requerido.
 - `/favorites` lista las recetas marcadas (auth-gated).
+- Fork via server action: copia receta + ingredientes bajo el user, lineage poblado.
 - 21 ingredientes seedados con densidades para líquidos + 5 recetas curadas (chorizo criollo argentino, cantimpalos español, parrillera uruguaya, longaniza catalana, chorizo mexicano) bajo el usuario `chorizolab`.
-- RLS aplicado en todas las tablas.
+- RLS aplicado en todas las tablas. Triggers de contadores con `SECURITY DEFINER` para bypassear RLS al actualizar `recipes.favorites_count` / `recipes.ratings_avg`.
 
 Pendiente (próximas iteraciones):
 
-- Histórico de versiones visible en UI (lista de v1, v2, v3… con sus change_notes).
-- Diff visual entre versiones.
-- Comments / cooking tips.
-- Ratings UI (1–5 estrellas, schema ya soporta).
-- Forks y proposals UI.
+- Diff visual entre versiones de una receta.
+- Cooking tips destacados (subset de comments).
+- Perfiles públicos navegables (`/u/[username]`).
 - Stores y mapa.
+- Proposals UI (PR-style entre recetas).
 - Custom SMTP (Resend), dominio propio, SEO, analytics.
 
 ## 10. Roadmap por fases

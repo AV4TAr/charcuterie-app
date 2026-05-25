@@ -149,11 +149,20 @@ Scaffolding completo: schema (8 tablas + RLS + triggers), calculadora multi-unit
 
 ## Pendientes (orden de prioridad)
 
+### Fase 4 — Comunidad y colaboración (cerrada esta sesión)
+- ✅ Histórico de versiones colapsable en `/r/[id]` con número, change_note, autor y fecha. Versión current marcada en ámbar.
+- ✅ `RatingStars` client component: hover/click sobre 5 estrellas, upsert con onConflict (user_id, recipe_id), muestra avg + count. El trigger `recalc_rating` actualiza counters (con SECURITY DEFINER ya).
+- ✅ `Comments` con threads de 1 nivel: top-level + replies. Form de comentario para usuarios autenticados, botón Reply inline. RLS permite ver comments si la receta es pública o propia.
+- ✅ Fork via server action (`src/app/actions/fork.ts`): copia recipe + current version + ingredientes bajo el user actual, con `forked_from_recipe_id` y `forked_from_version_id` poblados. Visibilidad inicial = private.
+- ✅ `ForkButton` visible para no-dueños. Botón Edit reemplaza Fork cuando sos dueño (no tiene sentido forkear lo propio).
+- ✅ Lineage visible en detail: "Forkeada de [original] (autor)" cuando aplica.
+
 ### Corto plazo (próxima sesión)
-- Histórico visible de versiones de una receta (lista de v1, v2, v3… con sus change_notes).
 - Diff visual entre dos versiones (qué % cambió, qué ingrediente se agregó/quitó).
 - Cooking tips destacados (subset de comments marcados como tip).
-- Verificar visualmente que el seed corrió en producción (5 recetas aparecen en `/explore`).
+- Perfiles públicos navegables (`/u/[username]` con lista de recetas del user).
+- Stores + mapa para "dónde comprar".
+- Proposals UI (PR-style entre recetas).
 
 ### Mediano plazo (Fase 4 — comunidad)
 - Comments en recetas (con threads).

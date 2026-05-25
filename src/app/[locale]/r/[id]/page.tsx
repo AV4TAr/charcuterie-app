@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/lib/i18n/routing";
 import { WeightCalculator } from "@/components/recipe/weight-calculator";
 import { FavoriteButton } from "@/components/recipe/favorite-button";
+import { RatingStars } from "@/components/recipe/rating-stars";
+import { Comments, type CommentRow } from "@/components/recipe/comments";
+import { ForkButton } from "@/components/recipe/fork-button";
+import { VersionHistory, type VersionRow } from "@/components/recipe/version-history";
 import { fromCanonical } from "@/lib/units";
 import type { Locale } from "@/lib/i18n/config";
 import type { RecipeIngredient } from "@/lib/recipes/calculator";
@@ -22,7 +26,7 @@ export default async function RecipeDetailPage({
 
   const { data: recipe, error } = await supabase
     .from("recipes")
-    .select("id, title, description, visibility, owner_id, favorites_count, created_at, profiles!owner_id(username, display_name), current_version_id")
+    .select("id, title, description, visibility, owner_id, favorites_count, ratings_avg, ratings_count, forked_from_recipe_id, created_at, profiles!owner_id(username, display_name), current_version_id")
     .eq("id", id)
     .single();
 
@@ -64,14 +68,60 @@ export default async function RecipeDetailPage({
   const isOwner = user?.id === recipe.owner_id;
 
   let isFavorited = false;
+  let userRating: number | null = null;
   if (user) {
-    const { data: fav } = await supabase
-      .from("favorites")
-      .select("user_id")
-      .eq("user_id", user.id)
-      .eq("recipe_id", recipe.id)
+    const [favRes, ratingRes] = await Promise.all([
+      supabase.from("favorites").select("user_id").eq("user_id", user.id).eq("recipe_id", recipe.id).maybeSingle(),
+      supabase.from("ratings").select("score").eq("user_id", user.id).eq("recipe_id", recipe.id).maybeSingle(),
+    ]);
+    isFavorited = !!favRes.data;
+    userRating = ratingRes.data?.score ?? null;
+  }
+
+  const { data: rawComments = [] } = await supabase
+    .from("comments")
+    .select("id, body, parent_id, created_at, author_id, profiles!author_id(username, display_name)")
+    .eq("recipe_id", recipe.id)
+    .order("created_at", { ascending: true });
+
+  const comments: CommentRow[] = (rawComments ?? []).map((c) => ({
+    id: c.id,
+    body: c.body,
+    parent_id: c.parent_id,
+    created_at: c.created_at,
+    author_id: c.author_id,
+    author: c.profiles as unknown as CommentRow["author"],
+  }));
+
+  const { data: rawVersions = [] } = await supabase
+    .from("recipe_versions")
+    .select("id, version_number, change_note, created_at, profiles!created_by(username, display_name)")
+    .eq("recipe_id", recipe.id)
+    .order("version_number", { ascending: false });
+
+  const versions: VersionRow[] = (rawVersions ?? []).map((v) => ({
+    id: v.id,
+    version_number: v.version_number,
+    change_note: v.change_note,
+    created_at: v.created_at,
+    is_current: v.id === recipe.current_version_id,
+    author: v.profiles as unknown as VersionRow["author"],
+  }));
+
+  let forkedFrom: { id: string; title: string; profiles: { username: string; display_name: string | null } | null } | null = null;
+  if (recipe.forked_from_recipe_id) {
+    const { data } = await supabase
+      .from("recipes")
+      .select("id, title, profiles!owner_id(username, display_name)")
+      .eq("id", recipe.forked_from_recipe_id)
       .maybeSingle();
-    isFavorited = !!fav;
+    if (data) {
+      forkedFrom = {
+        id: data.id,
+        title: data.title,
+        profiles: data.profiles as unknown as { username: string; display_name: string | null } | null,
+      };
+    }
   }
 
   const t = await getTranslations("recipe");
@@ -79,30 +129,49 @@ export default async function RecipeDetailPage({
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-3xl font-bold text-zinc-100">{recipe.title}</h1>
           {recipe.description && <p className="text-zinc-400 mt-2">{recipe.description}</p>}
           <p className="text-xs text-zinc-600 mt-2">
             {t("by")} {owner?.display_name ?? owner?.username ?? "—"} · {t("version", { number: version.version_number })}
           </p>
+          {forkedFrom && (
+            <p className="text-xs text-zinc-500 mt-1">
+              {t("forkedFrom")}{" "}
+              <Link href={`/r/${forkedFrom.id}`} className="underline hover:text-zinc-300">
+                {forkedFrom.title}
+              </Link>{" "}
+              ({forkedFrom.profiles?.display_name ?? forkedFrom.profiles?.username ?? "—"})
+            </p>
+          )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           <FavoriteButton
             recipeId={recipe.id}
             userId={user?.id ?? null}
             initialIsFavorited={isFavorited}
             initialCount={recipe.favorites_count ?? 0}
           />
-          {isOwner && (
+          {isOwner ? (
             <Link
               href={`/r/${recipe.id}/edit`}
               className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 transition"
             >
               {t("edit")}
             </Link>
+          ) : (
+            <ForkButton recipeId={recipe.id} userId={user?.id ?? null} />
           )}
         </div>
       </div>
+
+      <RatingStars
+        recipeId={recipe.id}
+        userId={user?.id ?? null}
+        initialUserRating={userRating}
+        avg={Number(recipe.ratings_avg ?? 0)}
+        count={recipe.ratings_count ?? 0}
+      />
 
       {ingredients.length > 0 ? (
         <WeightCalculator
@@ -121,6 +190,15 @@ export default async function RecipeDetailPage({
           <p className="text-zinc-400 whitespace-pre-wrap text-sm">{version.instructions}</p>
         </div>
       )}
+
+      <VersionHistory versions={versions} locale={locale} />
+
+      <Comments
+        recipeId={recipe.id}
+        userId={user?.id ?? null}
+        initialComments={comments}
+        locale={locale}
+      />
     </div>
   );
 }

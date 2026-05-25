@@ -5,7 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
-import { toCanonical, unitsForType, MASS_UNITS, type Unit, type MeasurementType } from "@/lib/units";
+import { toCanonical, unitsForType, MASS_UNITS, VOLUME_UNITS, LENGTH_UNITS, COUNT_UNITS, type Unit, type MeasurementType } from "@/lib/units";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,6 +57,7 @@ export function RecipeForm({
   userId: string;
 }) {
   const t = useTranslations("recipe");
+  const tUnits = useTranslations("units");
   const router = useRouter();
   const [saveError, setSaveError] = useState("");
 
@@ -215,7 +216,7 @@ export function RecipeForm({
         {fields.map((field, index) => {
           const row = rows[index];
           const ing = row ? getIngredient(row.ingredientId) : null;
-          const availableUnits = ing ? unitsForType(ing.measurement_type) : (["g"] as Unit[]);
+          const mode = row?.mode ?? "percent";
 
           return (
             <div key={field.id} className="flex flex-wrap gap-2 items-end rounded-md border border-zinc-800 bg-zinc-900/50 p-3">
@@ -231,7 +232,10 @@ export function RecipeForm({
                       onChange={(e) => {
                         f.onChange(e);
                         const ing2 = getIngredient(e.target.value);
-                        if (ing2) setValue(`rows.${index}.displayUnit`, unitsForType(ing2.measurement_type)[0]);
+                        const currentMode = rows[index]?.mode ?? "percent";
+                        if (ing2 && currentMode === "percent") {
+                          setValue(`rows.${index}.displayUnit`, unitsForType(ing2.measurement_type)[0]);
+                        }
                       }}
                     >
                       {ingredients.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
@@ -242,10 +246,25 @@ export function RecipeForm({
 
               <div className="space-y-1">
                 <span className="text-xs text-zinc-500">{t("mode")}</span>
-                <Select {...register(`rows.${index}.mode`)} className="w-32">
-                  <option value="percent">{t("percentMode")}</option>
-                  <option value="absolute">{t("absoluteMode")}</option>
-                </Select>
+                <Controller
+                  control={control}
+                  name={`rows.${index}.mode`}
+                  render={({ field: f }) => (
+                    <Select
+                      {...f}
+                      className="w-32"
+                      onChange={(e) => {
+                        f.onChange(e);
+                        if (e.target.value === "percent" && ing) {
+                          setValue(`rows.${index}.displayUnit`, unitsForType(ing.measurement_type)[0]);
+                        }
+                      }}
+                    >
+                      <option value="percent">{t("percentMode")}</option>
+                      <option value="absolute">{t("absoluteMode")}</option>
+                    </Select>
+                  )}
+                />
               </div>
 
               <div className="space-y-1 w-20">
@@ -255,8 +274,27 @@ export function RecipeForm({
 
               <div className="space-y-1">
                 <span className="text-xs text-zinc-500">{t("unit")}</span>
-                <Select {...register(`rows.${index}.displayUnit`)} className="w-20">
-                  {availableUnits.map((u) => <option key={u} value={u}>{u}</option>)}
+                <Select {...register(`rows.${index}.displayUnit`)} className="w-24">
+                  {mode === "percent" && ing ? (
+                    unitsForType(ing.measurement_type).map((u) => (
+                      <option key={u} value={u}>{u}</option>
+                    ))
+                  ) : (
+                    <>
+                      <optgroup label={tUnits("mass")}>
+                        {MASS_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                      </optgroup>
+                      <optgroup label={tUnits("volume")}>
+                        {VOLUME_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                      </optgroup>
+                      <optgroup label={tUnits("length")}>
+                        {LENGTH_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                      </optgroup>
+                      <optgroup label={tUnits("count")}>
+                        {COUNT_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                      </optgroup>
+                    </>
+                  )}
                 </Select>
               </div>
 

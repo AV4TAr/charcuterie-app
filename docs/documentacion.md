@@ -172,13 +172,25 @@ Funcionando en producción:
 - 21 ingredientes seedados con densidades para líquidos + 5 recetas curadas (chorizo criollo argentino, cantimpalos español, parrillera uruguaya, longaniza catalana, chorizo mexicano) bajo el usuario `chorizolab`.
 - RLS aplicado en todas las tablas. Triggers de contadores con `SECURITY DEFINER` para bypassear RLS al actualizar `recipes.favorites_count` / `recipes.ratings_avg`.
 
+Sistema visual (Lab — diseño definitivo):
+
+- Tipografía: Instrument Serif (display, italics expresivas), Geist (UI sans), JetBrains Mono (datos, %, unidades).
+- Paleta única "Lab" con dark + light:
+  - Light: papel #ecebe4, ink #1a1a22, accent (rojo bisturí) #d33a2c, accent-2 (azul tinta) #213044.
+  - Dark: bg #131318, paper #1c1c23, ink #ecebe4, accent #f55b4d.
+- Identidad: glifo dual lectura (corte de chorizo + dial de medición) + wordmark "Chorizo *Lab*".
+- Lenguaje visual: cuaderno de laboratorio, grid de papel cuadriculado en hero, stamps rotados, % como ciudadano de primera, mono para datos.
+- Toggle dark/light persistido en localStorage (`cl-theme`), dark default.
+
 Pendiente (próximas iteraciones):
 
+- Aplicar el sistema visual Lab a páginas internas (/explore, /new, /r/[id], /favorites, /login). Hoy solo landing y nav lo usan; el resto sigue con la mezcla zinc/amber anterior.
 - Diff visual entre versiones de una receta.
 - Cooking tips destacados (subset de comments).
 - Perfiles públicos navegables (`/u/[username]`).
 - Stores y mapa.
 - Proposals UI (PR-style entre recetas).
+- AI assistant "Don Marco" (chat para crear/modificar recetas con preview en vivo).
 - Custom SMTP (Resend), dominio propio, SEO, analytics.
 
 ## 10. Roadmap por fases

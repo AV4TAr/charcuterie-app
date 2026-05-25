@@ -157,12 +157,16 @@ Scaffolding completo: schema (8 tablas + RLS + triggers), calculadora multi-unit
 - ✅ `ForkButton` visible para no-dueños. Botón Edit reemplaza Fork cuando sos dueño (no tiene sentido forkear lo propio).
 - ✅ Lineage visible en detail: "Forkeada de [original] (autor)" cuando aplica.
 
-### Corto plazo (próxima sesión)
-- Diff visual entre dos versiones (qué % cambió, qué ingrediente se agregó/quitó).
-- Cooking tips destacados (subset de comments marcados como tip).
-- Perfiles públicos navegables (`/u/[username]` con lista de recetas del user).
-- Stores + mapa para "dónde comprar".
-- Proposals UI (PR-style entre recetas).
+### Fase 5 — Design system (Lab) (parcial, en curso)
+- ✅ Sistema visual Lab implementado en `src/app/globals.css`: tokens (light + dark), tipografía (Instrument Serif display, Geist UI, JetBrains Mono datos), clases utilitarias (`.stamp`, `.eyebrow`, `.serif`, `.mono`, `.paper-bg`, `.lab-grid-bg`, `.btn`, `.tag`, `.field`, `.card`).
+- ✅ Brand identity en `src/components/brand/`: `BrandMark` (SVG: corte transversal de chorizo + dial de medición) y `Logo` con wordmark "Chorizo *Lab*" en cursiva con accent.
+- ✅ `ThemeToggle` con persistencia en localStorage. Dark default, light disponible. Script inline en `<body>` aplica el tema antes de hidratar para evitar flash.
+- ✅ SiteNav rediseñada con Logo + paleta Lab + botones .btn .btn-sm.
+- ✅ Landing rediseñada con hero serif grande, stamp "LAB · SPEC 04.26", em accent en "fórmula", stats con líneas verticales, demo card con shadow offset "8px 8px 0", 3 pilares numerados.
+- ⏳ Aplicar el nuevo sistema visual a páginas existentes (/explore, /new, /r/[id], /favorites, /login). Hoy siguen viéndose con la mezcla anterior de Tailwind zinc/amber.
+- ⏳ Componentes UI existentes (Button, Card, Input, etc.) migrar a usar variables var(--ink), var(--paper), var(--accent) en lugar de zinc/amber hardcoded.
+- ⏳ AI Assistant "Don Marco" (chat con preview en vivo).
+- ⏳ Version diff visual (side-by-side / commit log / barras proporcionales — el diseño tiene 3 variantes).
 
 ### Mediano plazo (Fase 4 — comunidad)
 - Comments en recetas (con threads).

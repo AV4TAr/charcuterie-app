@@ -1,14 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { locales } from "@/lib/i18n/config";
 import { SiteNav } from "@/components/layout/site-nav";
 import "../globals.css";
-
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Chorizo Lab",
@@ -17,12 +13,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#131318",
 };
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
+
+const themeInitScript = `
+(function(){try{var t=localStorage.getItem('cl-theme')||'dark';document.body.classList.add('theme-lab',t);}catch(e){document.body.classList.add('theme-lab','dark');}})();
+`;
 
 export default async function LocaleLayout({
   children,
@@ -37,9 +37,8 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale}>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-zinc-100 min-h-screen`}
-      >
+      <body className="theme-lab dark min-h-screen">
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <NextIntlClientProvider>
           <SiteNav />
           <main className="max-w-6xl mx-auto px-4 py-10">{children}</main>

@@ -1,12 +1,199 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ─── Lab design tokens (light + dark) ─────────────────────────── */
+:root {
+  --serif: 'Instrument Serif', 'Source Serif Pro', Georgia, serif;
+  --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 14px;
 }
 
-html,
-body {
-  background: #0a0a0a;
-  color: #ededed;
+.theme-lab.light {
+  --bg:        #ecebe4;
+  --bg-2:      #e2e1d8;
+  --paper:     #f2f1ea;
+  --ink:       #1a1a22;
+  --ink-2:     #45454f;
+  --ink-3:     #797986;
+  --rule:      #c8c7bd;
+  --rule-soft: #d6d5ca;
+  --accent:    #d33a2c;
+  --accent-2:  #213044;
+  --good:      #3a7a4a;
+  --warn:      #d33a2c;
+  --grid:      rgba(26,26,34,0.06);
+  --shadow:    0 1px 0 rgba(26,26,34,0.04), 0 12px 28px -16px rgba(26,26,34,0.18);
 }
+
+.theme-lab.dark {
+  --bg:        #131318;
+  --bg-2:      #1a1a20;
+  --paper:     #1c1c23;
+  --ink:       #ecebe4;
+  --ink-2:     #b8b7af;
+  --ink-3:     #7a7972;
+  --rule:      #2e2e36;
+  --rule-soft: #24242b;
+  --accent:    #f55b4d;
+  --accent-2:  #6c8db8;
+  --good:      #6fb37d;
+  --warn:      #f55b4d;
+  --grid:      rgba(236,235,228,0.05);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -20px rgba(0,0,0,0.6);
+}
+
+/* ─── Base ──────────────────────────────────────────────────── */
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  margin: 0;
+  padding: 0;
+  font-family: var(--sans);
+  font-feature-settings: "ss01","cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Typography utilities ─────────────────────────────────────── */
+.serif { font-family: var(--serif); font-weight: 400; letter-spacing: -0.01em; }
+.mono  { font-family: var(--mono); font-variant-numeric: tabular-nums; font-feature-settings: "zero","ss01"; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ─── Backgrounds ──────────────────────────────────────────────── */
+.paper-bg {
+  background:
+    radial-gradient(rgba(0,0,0,0.012) 1px, transparent 1px) 0 0/3px 3px,
+    var(--paper);
+}
+
+.lab-grid-bg {
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/20px 20px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/20px 20px,
+    var(--paper);
+}
+
+.border-rule { border: 1px solid var(--rule); }
+.border-rule-soft { border: 1px solid var(--rule-soft); }
+.border-b-rule { border-bottom: 1px solid var(--rule); }
+.border-t-rule { border-top: 1px solid var(--rule); }
+
+/* ─── Buttons ──────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 14px;
+  font-family: var(--sans); font-weight: 500; font-size: 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+  transition: 120ms ease;
+}
+.btn:hover { background: var(--bg-2); }
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); color: var(--paper); }
+.btn-accent {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.btn-accent:hover { filter: brightness(1.05); }
+.btn-ghost { background: transparent; border-color: transparent; }
+.btn-ghost:hover { background: var(--bg-2); }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
+.btn-lg { padding: 12px 18px; font-size: 14px; }
+
+/* ─── Tags & stamps ────────────────────────────────────────────── */
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: var(--bg-2);
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+  border: 1px solid var(--rule-soft);
+}
+.tag-accent {
+  background: color-mix(in oklab, var(--accent) 12%, var(--paper));
+  border-color: color-mix(in oklab, var(--accent) 30%, var(--rule));
+  color: var(--accent);
+}
+
+.stamp {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1.5px solid var(--accent-2);
+  color: var(--accent-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transform: rotate(-1.5deg);
+  border-radius: 3px;
+}
+
+/* ─── Fields ───────────────────────────────────────────────────── */
+.field {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+.field:focus-within { border-color: var(--ink); }
+.field input {
+  border: none; outline: none; background: transparent;
+  width: 100%; color: inherit; font: inherit;
+}
+.unit-pill {
+  font-family: var(--mono); font-size: 10px;
+  background: var(--bg-2); padding: 2px 6px;
+  border-radius: 3px; color: var(--ink-2);
+  letter-spacing: 0.04em;
+}
+
+/* ─── Cards ────────────────────────────────────────────────────── */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ─── Diff & misc ──────────────────────────────────────────────── */
+.diff-add { color: var(--good); }
+.diff-rem { color: var(--warn); }
+.diff-chg { color: var(--ink); }
+
+.dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+.row-hover:hover { background: color-mix(in oklab, var(--accent) 5%, var(--paper)); }
+
+/* ─── Hide scrollbar utility ───────────────────────────────────── */
+.hide-scroll::-webkit-scrollbar { display: none; }
+.hide-scroll { scrollbar-width: none; }
+
+/* ─── Selection ────────────────────────────────────────────────── */
+::selection { background: var(--accent); color: white; }

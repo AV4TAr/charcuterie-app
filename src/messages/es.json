@@ -6,6 +6,7 @@
   "nav": {
     "home": "Inicio",
     "explore": "Explorar",
+    "library": "Mi cuaderno",
     "newRecipe": "Nueva receta",
     "favorites": "Favoritos",
     "login": "Ingresar",
@@ -29,6 +30,25 @@
       "social": "Favoritos, ratings, comentarios y tips de cocción",
       "socialDesc": "Toda la comunidad puntúa y comparte tips sobre cada receta."
     }
+  },
+  "library": {
+    "title": "Mi cuaderno",
+    "subtitle": "Tus fórmulas, tus versiones.",
+    "tabAll": "Todas",
+    "tabPublic": "Públicas",
+    "tabPrivate": "Privadas",
+    "tabFavorites": "Favoritas",
+    "noRecipes": "Todavía no tenés recetas",
+    "noRecipesHint": "Creá tu primera fórmula y aparece acá.",
+    "noPublic": "Todavía no tenés recetas públicas",
+    "noPrivate": "Todavía no tenés recetas privadas",
+    "noFavorites": "Todavía no guardaste favoritas",
+    "noFavoritesHint": "Tocá la estrella en cualquier receta para guardarla acá.",
+    "createFirst": "Crear primera receta",
+    "browsePublic": "Explorar recetas",
+    "statsRecipes": "recetas",
+    "statsStars": "estrellas",
+    "statsForks": "forks"
   },
   "calculator": {
     "title": "Calculadora",

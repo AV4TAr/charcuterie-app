@@ -6,6 +6,7 @@
   "nav": {
     "home": "Home",
     "explore": "Explore",
+    "library": "My notebook",
     "newRecipe": "New recipe",
     "favorites": "Favorites",
     "login": "Sign in",
@@ -29,6 +30,25 @@
       "social": "Favorites, ratings, comments and cooking tips",
       "socialDesc": "The community rates and shares cooking tips for every recipe."
     }
+  },
+  "library": {
+    "title": "My notebook",
+    "subtitle": "Your formulas, your versions.",
+    "tabAll": "All",
+    "tabPublic": "Public",
+    "tabPrivate": "Private",
+    "tabFavorites": "Favorites",
+    "noRecipes": "No recipes yet",
+    "noRecipesHint": "Create your first formula and it'll show up here.",
+    "noPublic": "No public recipes yet",
+    "noPrivate": "No private recipes yet",
+    "noFavorites": "No favorites saved yet",
+    "noFavoritesHint": "Tap the star on any recipe to save it here.",
+    "createFirst": "Create first recipe",
+    "browsePublic": "Explore recipes",
+    "statsRecipes": "recipes",
+    "statsStars": "stars",
+    "statsForks": "forks"
   },
   "calculator": {
     "title": "Calculator",

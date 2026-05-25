@@ -21,18 +21,16 @@ export async function SiteNav() {
           <Logo size={12} />
         </Link>
         <nav className="hidden md:flex items-center gap-5 text-[13px]" style={{ color: "var(--ink-2)" }}>
-          <Link href="/" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
-            {t("home")}
-          </Link>
           <Link href="/explore" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
             {t("explore")}
           </Link>
-          <Link href="/new" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
-            {t("newRecipe")}
-          </Link>
-          {user && (
-            <Link href="/favorites" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
-              {t("favorites")}
+          {user ? (
+            <Link href="/library" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
+              {t("library")}
+            </Link>
+          ) : (
+            <Link href="/new" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
+              {t("newRecipe")}
             </Link>
           )}
         </nav>

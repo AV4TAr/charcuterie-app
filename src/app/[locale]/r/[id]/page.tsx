@@ -127,25 +127,37 @@ export default async function RecipeDetailPage({
   const t = await getTranslations("recipe");
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="max-w-2xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-bold text-zinc-100">{recipe.title}</h1>
-          {recipe.description && <p className="text-zinc-400 mt-2">{recipe.description}</p>}
-          <p className="text-xs text-zinc-600 mt-2">
-            {t("by")} {owner?.display_name ?? owner?.username ?? "—"} · {t("version", { number: version.version_number })}
-          </p>
-          {forkedFrom && (
-            <p className="text-xs text-zinc-500 mt-1">
-              {t("forkedFrom")}{" "}
-              <Link href={`/r/${forkedFrom.id}`} className="underline hover:text-zinc-300">
-                {forkedFrom.title}
-              </Link>{" "}
-              ({forkedFrom.profiles?.display_name ?? forkedFrom.profiles?.username ?? "—"})
+          <h1 className="serif" style={{ fontSize: 36, margin: "0 0 8px", lineHeight: 1.05, color: "var(--ink)" }}>
+            {recipe.title}
+          </h1>
+          {recipe.description && (
+            <p style={{ fontSize: 15, color: "var(--ink-2)", margin: "0 0 8px", lineHeight: 1.45 }}>
+              {recipe.description}
             </p>
           )}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="tag mono">v{version.version_number}</span>
+            <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>
+              {t("by")} {owner?.display_name ?? owner?.username ?? "—"}
+            </span>
+            {forkedFrom && (
+              <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>
+                {t("forkedFrom")}{" "}
+                <Link
+                  href={`/r/${forkedFrom.id}`}
+                  style={{ color: "var(--accent-2)", textDecoration: "underline" }}
+                >
+                  {forkedFrom.title}
+                </Link>
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <FavoriteButton
             recipeId={recipe.id}
             userId={user?.id ?? null}
@@ -153,10 +165,7 @@ export default async function RecipeDetailPage({
             initialCount={recipe.favorites_count ?? 0}
           />
           {isOwner ? (
-            <Link
-              href={`/r/${recipe.id}/edit`}
-              className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 transition"
-            >
+            <Link href={`/r/${recipe.id}/edit`} className="btn btn-sm">
               {t("edit")}
             </Link>
           ) : (
@@ -181,13 +190,20 @@ export default async function RecipeDetailPage({
           locale={locale}
         />
       ) : (
-        <p className="text-zinc-500 text-sm">{t("noIngredients")}</p>
+        <p style={{ fontSize: 13, color: "var(--ink-3)" }}>{t("noIngredients")}</p>
       )}
 
       {version.instructions && (
         <div>
-          <h2 className="text-lg font-semibold text-zinc-200 mb-2">{t("instructions")}</h2>
-          <p className="text-zinc-400 whitespace-pre-wrap text-sm">{version.instructions}</p>
+          <h2
+            className="eyebrow"
+            style={{ marginBottom: 12, borderBottom: "1px solid var(--rule)", paddingBottom: 8 }}
+          >
+            {t("instructions")}
+          </h2>
+          <p style={{ fontSize: 14, color: "var(--ink-2)", whiteSpace: "pre-wrap", lineHeight: 1.6, margin: 0 }}>
+            {version.instructions}
+          </p>
         </div>
       )}
 

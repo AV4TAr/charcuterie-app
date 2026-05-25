@@ -6,10 +6,6 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
 import { toCanonical, unitsForType, MASS_UNITS, VOLUME_UNITS, LENGTH_UNITS, COUNT_UNITS, type Unit, type MeasurementType } from "@/lib/units";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 
 type DbIngredient = {
   id: string;
@@ -208,64 +204,68 @@ export function RecipeForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="title">{t("title")} *</Label>
-        <Input
+      <div>
+        <label className="label-lab" htmlFor="title">{t("title")} *</label>
+        <input
           id="title"
           {...register("title", { required: true })}
           placeholder={t("titlePlaceholder")}
-          className={errors.title ? "border-red-500" : ""}
+          className={`input-lab${errors.title ? " err" : ""}`}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">{t("description")}</Label>
+      <div>
+        <label className="label-lab" htmlFor="description">{t("description")}</label>
         <textarea
           id="description"
           {...register("description")}
           placeholder={t("descriptionPlaceholder")}
           rows={2}
-          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+          className="textarea-lab"
         />
       </div>
 
-      <div className="flex gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="visibility">{t("visibility")}</Label>
-          <Select id="visibility" {...register("visibility")} className="w-36">
+      <div className="flex gap-6 flex-wrap">
+        <div>
+          <label className="label-lab" htmlFor="visibility">{t("visibility")}</label>
+          <select id="visibility" {...register("visibility")} className="select-lab" style={{ width: 144 }}>
             <option value="private">{t("private")}</option>
             <option value="public">{t("public")}</option>
-          </Select>
+          </select>
         </div>
-        <div className="space-y-2">
-          <Label>{t("meatBase")}</Label>
+        <div>
+          <label className="label-lab">{t("meatBase")}</label>
           <div className="flex gap-2">
-            <Input type="number" step="0.001" min="0.001" {...register("meatBaseValue")} className="w-24" />
-            <Select {...register("meatBaseUnit")} className="w-20">
+            <input type="number" step="0.001" min="0.001" {...register("meatBaseValue")} className="input-lab" style={{ width: 96 }} />
+            <select {...register("meatBaseUnit")} className="select-lab" style={{ width: 80 }}>
               {MASS_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-            </Select>
+            </select>
           </div>
         </div>
       </div>
 
       <div className="space-y-3">
-        <Label>{t("ingredients")}</Label>
+        <label className="label-lab">{t("ingredients")}</label>
         {fields.map((field, index) => {
           const row = rows[index];
           const ing = row ? getIngredient(row.ingredientId) : null;
           const mode = row?.mode ?? "percent";
 
           return (
-            <div key={field.id} className="flex flex-wrap gap-2 items-end rounded-md border border-zinc-800 bg-zinc-900/50 p-3">
-              <div className="flex-1 min-w-[160px] space-y-1">
-                <span className="text-xs text-zinc-500">{t("selectIngredient")}</span>
+            <div
+              key={field.id}
+              className="flex flex-wrap gap-2 items-end p-3 rounded"
+              style={{ border: "1px solid var(--rule)", background: "var(--bg-2)" }}
+            >
+              <div className="flex-1 min-w-[160px]">
+                <span className="label-lab">{t("selectIngredient")}</span>
                 <Controller
                   control={control}
                   name={`rows.${index}.ingredientId`}
                   render={({ field: f }) => (
-                    <Select
+                    <select
                       {...f}
-                      className="w-full"
+                      className="select-lab w-full"
                       onChange={(e) => {
                         f.onChange(e);
                         const ing2 = getIngredient(e.target.value);
@@ -276,20 +276,21 @@ export function RecipeForm({
                       }}
                     >
                       {ingredients.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
-                    </Select>
+                    </select>
                   )}
                 />
               </div>
 
-              <div className="space-y-1">
-                <span className="text-xs text-zinc-500">{t("mode")}</span>
+              <div>
+                <span className="label-lab">{t("mode")}</span>
                 <Controller
                   control={control}
                   name={`rows.${index}.mode`}
                   render={({ field: f }) => (
-                    <Select
+                    <select
                       {...f}
-                      className="w-32"
+                      className="select-lab"
+                      style={{ width: 128 }}
                       onChange={(e) => {
                         f.onChange(e);
                         if (e.target.value === "percent" && ing) {
@@ -299,19 +300,19 @@ export function RecipeForm({
                     >
                       <option value="percent">{t("percentMode")}</option>
                       <option value="absolute">{t("absoluteMode")}</option>
-                    </Select>
+                    </select>
                   )}
                 />
               </div>
 
-              <div className="space-y-1 w-20">
-                <span className="text-xs text-zinc-500">{t("value")}</span>
-                <Input type="number" step="0.01" min="0" {...register(`rows.${index}.value`)} />
+              <div style={{ width: 80 }}>
+                <span className="label-lab">{t("value")}</span>
+                <input type="number" step="0.01" min="0" {...register(`rows.${index}.value`)} className="input-lab" />
               </div>
 
-              <div className="space-y-1">
-                <span className="text-xs text-zinc-500">{t("unit")}</span>
-                <Select {...register(`rows.${index}.displayUnit`)} className="w-24">
+              <div>
+                <span className="label-lab">{t("unit")}</span>
+                <select {...register(`rows.${index}.displayUnit`)} className="select-lab" style={{ width: 96 }}>
                   {mode === "percent" && ing ? (
                     unitsForType(ing.measurement_type).map((u) => (
                       <option key={u} value={u}>{u}</option>
@@ -332,53 +333,59 @@ export function RecipeForm({
                       </optgroup>
                     </>
                   )}
-                </Select>
+                </select>
               </div>
 
               <button
                 type="button"
                 onClick={() => remove(index)}
-                className="text-zinc-600 hover:text-red-400 transition text-xl leading-none mb-1"
+                className="btn btn-ghost btn-sm"
                 aria-label="Remove"
+                style={{ color: "var(--warn)", borderColor: "transparent" }}
               >
                 ×
               </button>
             </div>
           );
         })}
-        <Button type="button" variant="outline" onClick={addRow} className="w-full">
-          {t("addIngredient")}
-        </Button>
+        <button type="button" onClick={addRow} className="btn w-full" style={{ justifyContent: "center" }}>
+          + {t("addIngredient")}
+        </button>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="changeNote">
+      <div>
+        <label className="label-lab" htmlFor="changeNote">
           {t("changeNote")}{isEditing ? " *" : ""}
-        </Label>
-        <Input
+        </label>
+        <input
           id="changeNote"
           {...register("changeNote", { required: isEditing })}
           placeholder={isEditing ? t("changeNoteRequired") : t("changeNotePlaceholder")}
-          className={errors.changeNote ? "border-red-500" : ""}
+          className={`input-lab${errors.changeNote ? " err" : ""}`}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="instructions">{t("instructions")}</Label>
+      <div>
+        <label className="label-lab" htmlFor="instructions">{t("instructions")}</label>
         <textarea
           id="instructions"
           {...register("instructions")}
           placeholder={t("instructionsPlaceholder")}
           rows={4}
-          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+          className="textarea-lab"
         />
       </div>
 
-      {saveError && <p className="text-sm text-red-400">{saveError}</p>}
+      {saveError && <p style={{ fontSize: 13, color: "var(--warn)" }}>{saveError}</p>}
 
-      <Button type="submit" disabled={isSubmitting} className="w-full" size="lg">
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="btn btn-primary btn-lg w-full"
+        style={{ justifyContent: "center" }}
+      >
         {isSubmitting ? t("saving") : isEditing ? t("saveVersion") : t("save")}
-      </Button>
+      </button>
     </form>
   );
 }

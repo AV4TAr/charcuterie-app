@@ -4,7 +4,6 @@ import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
 
 export type CommentRow = {
   id: string;
@@ -102,8 +101,13 @@ export function Comments({
 
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-semibold text-zinc-200">
-        {t("comments")} {initialComments.length > 0 && <span className="text-zinc-500 text-sm font-normal">({initialComments.length})</span>}
+      <h2 style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--rule)" }}>
+        {t("comments")}{" "}
+        {initialComments.length > 0 && (
+          <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)", fontWeight: 400 }}>
+            ({initialComments.length})
+          </span>
+        )}
       </h2>
 
       {userId ? (
@@ -113,70 +117,90 @@ export function Comments({
             onChange={(e) => setBody(e.target.value)}
             placeholder={t("commentPlaceholder")}
             rows={3}
-            className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+            className="textarea-lab"
           />
           <div className="flex justify-end">
-            <Button type="submit" disabled={pending || !body.trim()} size="sm">
+            <button
+              type="submit"
+              disabled={pending || !body.trim()}
+              className="btn btn-primary btn-sm"
+            >
               {pending ? t("posting") : t("postComment")}
-            </Button>
+            </button>
           </div>
         </form>
       ) : (
-        <p className="text-sm text-zinc-500">{t("signInToComment")}</p>
+        <p style={{ fontSize: 13, color: "var(--ink-3)" }}>{t("signInToComment")}</p>
       )}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p style={{ fontSize: 13, color: "var(--warn)" }}>{error}</p>}
 
       {topLevel.length === 0 ? (
-        <p className="text-sm text-zinc-600 italic">{t("noComments")}</p>
+        <p style={{ fontSize: 13, color: "var(--ink-3)", fontStyle: "italic" }}>{t("noComments")}</p>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {topLevel.map((c) => {
             const replies = repliesOf(c.id);
             return (
-              <li key={c.id} className="rounded-md border border-zinc-800 bg-zinc-900/50 p-3 space-y-2">
-                <div className="flex items-baseline gap-2 text-xs">
-                  <span className="font-medium text-zinc-200">{authorLabel(c)}</span>
-                  <span className="text-zinc-600">{formatWhen(c.created_at, locale)}</span>
+              <li
+                key={c.id}
+                className="rounded p-3 space-y-2"
+                style={{ border: "1px solid var(--rule)", background: "var(--paper)" }}
+              >
+                <div className="flex items-baseline gap-2">
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>{authorLabel(c)}</span>
+                  <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{formatWhen(c.created_at, locale)}</span>
                 </div>
-                <p className="text-sm text-zinc-300 whitespace-pre-wrap">{c.body}</p>
+                <p style={{ fontSize: 13, color: "var(--ink-2)", whiteSpace: "pre-wrap", margin: 0 }}>{c.body}</p>
                 {userId && (
                   <button
                     type="button"
                     onClick={() => setReplyTo(replyTo === c.id ? null : c.id)}
-                    className="text-xs text-zinc-500 hover:text-zinc-300 transition"
+                    className="btn btn-ghost btn-sm"
+                    style={{ padding: "2px 6px", fontSize: 11 }}
                   >
                     {t("reply")}
                   </button>
                 )}
 
                 {replyTo === c.id && (
-                  <form onSubmit={(e) => onReply(e, c.id)} className="space-y-2 pl-3 border-l-2 border-zinc-800">
+                  <form
+                    onSubmit={(e) => onReply(e, c.id)}
+                    className="space-y-2 pl-3"
+                    style={{ borderLeft: "2px solid var(--rule)" }}
+                  >
                     <textarea
                       value={replyBody}
                       onChange={(e) => setReplyBody(e.target.value)}
                       placeholder={t("replyPlaceholder")}
                       rows={2}
                       autoFocus
-                      className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                      className="textarea-lab"
                     />
                     <div className="flex justify-end">
-                      <Button type="submit" disabled={pending || !replyBody.trim()} size="sm">
+                      <button
+                        type="submit"
+                        disabled={pending || !replyBody.trim()}
+                        className="btn btn-primary btn-sm"
+                      >
                         {pending ? t("posting") : t("postComment")}
-                      </Button>
+                      </button>
                     </div>
                   </form>
                 )}
 
                 {replies.length > 0 && (
-                  <ul className="space-y-2 pl-4 mt-2 border-l-2 border-zinc-800">
+                  <ul
+                    className="space-y-2 pl-4 mt-2"
+                    style={{ borderLeft: "2px solid var(--rule-soft)" }}
+                  >
                     {replies.map((r) => (
                       <li key={r.id} className="space-y-1">
-                        <div className="flex items-baseline gap-2 text-xs">
-                          <span className="font-medium text-zinc-200">{authorLabel(r)}</span>
-                          <span className="text-zinc-600">{formatWhen(r.created_at, locale)}</span>
+                        <div className="flex items-baseline gap-2">
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>{authorLabel(r)}</span>
+                          <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{formatWhen(r.created_at, locale)}</span>
                         </div>
-                        <p className="text-sm text-zinc-300 whitespace-pre-wrap">{r.body}</p>
+                        <p style={{ fontSize: 13, color: "var(--ink-2)", whiteSpace: "pre-wrap", margin: 0 }}>{r.body}</p>
                       </li>
                     ))}
                   </ul>

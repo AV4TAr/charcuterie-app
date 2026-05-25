@@ -41,16 +41,15 @@ export default async function FavoritesPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-8">{tFav("title")}</h1>
+      <h1 className="serif" style={{ fontSize: 32, margin: "0 0 32px", color: "var(--ink)" }}>
+        {tFav("title")}
+      </h1>
 
       {favorites.length === 0 ? (
-        <div className="text-center py-24 text-zinc-500">
-          <p className="text-lg mb-1">{tFav("empty")}</p>
-          <p className="text-sm mb-6">{tFav("emptyHint")}</p>
-          <Link
-            href="/explore"
-            className="text-sm px-4 py-2 rounded-md bg-amber-500 hover:bg-amber-400 text-black font-medium transition"
-          >
+        <div className="text-center py-24" style={{ color: "var(--ink-3)" }}>
+          <p style={{ fontSize: 18, marginBottom: 6 }}>{tFav("empty")}</p>
+          <p style={{ fontSize: 13, marginBottom: 24 }}>{tFav("emptyHint")}</p>
+          <Link href="/explore" className="btn btn-primary">
             {tFav("browse")}
           </Link>
         </div>
@@ -63,17 +62,27 @@ export default async function FavoritesPage({
               <Link
                 key={f.recipe_id}
                 href={`/r/${r.id}`}
-                className="block rounded-lg border border-zinc-800 bg-zinc-900 p-4 hover:border-zinc-600 transition group"
+                style={{ textDecoration: "none", display: "block" }}
               >
-                <h2 className="font-semibold text-zinc-100 group-hover:text-amber-300 transition mb-1">
-                  {r.title}
-                </h2>
-                {r.description && (
-                  <p className="text-sm text-zinc-400 line-clamp-2 mb-3">{r.description}</p>
-                )}
-                <p className="text-xs text-zinc-600">
-                  {tRec("by")} {r.profiles?.display_name ?? r.profiles?.username ?? "—"}
-                </p>
+                <div className="card p-4 h-full flex flex-col transition" style={{ cursor: "pointer" }}>
+                  <h2
+                    className="serif"
+                    style={{ fontSize: 20, margin: "0 0 6px", color: "var(--ink)", lineHeight: 1.2 }}
+                  >
+                    {r.title}
+                  </h2>
+                  {r.description && (
+                    <p
+                      className="line-clamp-2"
+                      style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45, margin: "0 0 12px" }}
+                    >
+                      {r.description}
+                    </p>
+                  )}
+                  <p className="mono mt-auto" style={{ fontSize: 10, color: "var(--ink-3)" }}>
+                    {tRec("by")} {r.profiles?.display_name ?? r.profiles?.username ?? "—"}
+                  </p>
+                </div>
               </Link>
             );
           })}

@@ -53,7 +53,7 @@ export function RatingStars({
   const countLabel = count === 1 ? t("ratingsCount", { count }) : t("ratingsCountPlural", { count });
 
   return (
-    <div className="space-y-1">
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <div className="flex items-center gap-2">
         <div
           className="flex items-center gap-0.5"
@@ -66,27 +66,34 @@ export function RatingStars({
               onClick={() => setRating(n)}
               onMouseEnter={() => setHover(n)}
               aria-label={`Rate ${n}`}
-              className={`text-lg leading-none transition ${
-                n <= display ? "text-amber-400" : "text-zinc-700"
-              } hover:text-amber-300`}
+              style={{
+                fontSize: 18,
+                lineHeight: 1,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "0 1px",
+                color: n <= display ? "var(--accent)" : "var(--rule)",
+                transition: "color 80ms",
+              }}
             >
               ★
             </button>
           ))}
         </div>
         {count > 0 ? (
-          <span className="text-xs text-zinc-500">
+          <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)" }}>
             {avg.toFixed(1)} · {countLabel}
           </span>
         ) : (
-          <span className="text-xs text-zinc-600">{t("notRatedYet")}</span>
+          <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)" }}>{t("notRatedYet")}</span>
         )}
       </div>
       {!userId && (
-        <p className="text-xs text-zinc-600">{t("signInToRate")}</p>
+        <p className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{t("signInToRate")}</p>
       )}
       {showsUser && (
-        <p className="text-xs text-zinc-500">{t("yourRating")}: {userRating}/5</p>
+        <p className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{t("yourRating")}: {userRating}/5</p>
       )}
     </div>
   );

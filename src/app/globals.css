@@ -1,6 +1,5 @@
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
 
 /* ─── Lab design tokens (light + dark) ─────────────────────────── */
 :root {
@@ -190,6 +189,68 @@ html, body {
 .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 
 .row-hover:hover { background: color-mix(in oklab, var(--accent) 5%, var(--paper)); }
+
+/* ─── Native form elements ─────────────────────────────────────── */
+.input-lab {
+  display: block;
+  height: 40px;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  transition: border-color 120ms ease;
+  box-sizing: border-box;
+}
+.input-lab:focus { outline: none; border-color: var(--ink); }
+.input-lab::placeholder { color: var(--ink-3); }
+.input-lab.err { border-color: var(--warn); }
+
+.select-lab {
+  height: 40px;
+  padding: 4px 8px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 120ms ease;
+  box-sizing: border-box;
+}
+.select-lab:focus { outline: none; border-color: var(--ink); }
+.select-lab option { background: var(--paper); color: var(--ink); }
+
+.textarea-lab {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink);
+  resize: none;
+  transition: border-color 120ms ease;
+  box-sizing: border-box;
+}
+.textarea-lab:focus { outline: none; border-color: var(--ink); }
+.textarea-lab::placeholder { color: var(--ink-3); }
+
+.label-lab {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: block;
+  margin-bottom: 6px;
+}
 
 /* ─── Hide scrollbar utility ───────────────────────────────────── */
 .hide-scroll::-webkit-scrollbar { display: none; }

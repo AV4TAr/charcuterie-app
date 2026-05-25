@@ -41,11 +41,11 @@ export function ForkButton({
         type="button"
         onClick={handleClick}
         disabled={pending}
-        className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 transition disabled:opacity-50"
+        className="btn btn-sm"
       >
         {pending ? t("forking") : t("fork")}
       </button>
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="mono" style={{ fontSize: 10, color: "var(--warn)" }}>{error}</p>}
     </div>
   );
 }

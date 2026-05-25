@@ -79,8 +79,8 @@ export default async function EditRecipePage({
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">{t("edit")}: {recipe.title}</h1>
-      <p className="text-sm text-zinc-500 mb-8">{t("version", { number: version.version_number })} → v{version.version_number + 1}</p>
+      <h1 className="serif" style={{ fontSize: 32, margin: "0 0 6px", color: "var(--ink)" }}>{t("edit")}: {recipe.title}</h1>
+      <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginBottom: 32 }}>{t("version", { number: version.version_number })} → v{version.version_number + 1}</p>
       <RecipeForm
         locale={locale}
         ingredients={ingredients ?? []}

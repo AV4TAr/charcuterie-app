@@ -27,7 +27,7 @@ export default async function NewRecipePage({
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-8">{t("newRecipe")}</h1>
+      <h1 className="serif" style={{ fontSize: 32, margin: "0 0 32px", color: "var(--ink)" }}>{t("newRecipe")}</h1>
       <RecipeForm locale={locale} ingredients={ingredients ?? []} userId={user!.id} />
     </div>
   );

@@ -3,9 +3,6 @@
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -39,7 +36,7 @@ export function LoginForm({ locale }: { locale: string }) {
 
   if (status === "sent") {
     return (
-      <p className="text-sm text-zinc-200">
+      <p style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5 }}>
         {t("checkEmail", { email })}
       </p>
     );
@@ -47,9 +44,9 @@ export function LoginForm({ locale }: { locale: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">{t("email")}</Label>
-        <Input
+      <div>
+        <label className="label-lab" htmlFor="email">{t("email")}</label>
+        <input
           id="email"
           name="email"
           type="email"
@@ -58,13 +55,19 @@ export function LoginForm({ locale }: { locale: string }) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
+          className="input-lab"
         />
       </div>
-      <Button type="submit" disabled={status === "sending"} className="w-full">
+      <button
+        type="submit"
+        disabled={status === "sending"}
+        className="btn btn-primary w-full"
+        style={{ justifyContent: "center" }}
+      >
         {status === "sending" ? t("sending") : t("sendMagicLink")}
-      </Button>
+      </button>
       {status === "error" && (
-        <p className="text-sm text-red-400">{errorMsg || t("errorOccurred")}</p>
+        <p style={{ fontSize: 13, color: "var(--warn)" }}>{errorMsg || t("errorOccurred")}</p>
       )}
     </form>
   );

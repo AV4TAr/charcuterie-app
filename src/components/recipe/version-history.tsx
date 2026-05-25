@@ -25,40 +25,67 @@ export function VersionHistory({
   if (versions.length <= 1) return null;
 
   return (
-    <section className="border border-zinc-800 rounded-md bg-zinc-900/40">
+    <section
+      className="rounded"
+      style={{ border: "1px solid var(--rule)", overflow: "hidden" }}
+    >
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-3 text-left text-sm text-zinc-300 hover:text-zinc-100 transition"
+        className="w-full flex items-center justify-between p-3 text-left transition"
+        style={{ background: "var(--bg-2)", cursor: "pointer", border: "none" }}
         aria-expanded={open}
       >
-        <span className="font-medium">
-          {t("versions")} <span className="text-zinc-500 font-normal">({versions.length})</span>
+        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
+          {t("versions")}{" "}
+          <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>({versions.length})</span>
         </span>
-        <span className="text-xs text-zinc-500">{open ? t("hideHistory") : t("showHistory")}</span>
+        <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>
+          {open ? t("hideHistory") : t("showHistory")}
+        </span>
       </button>
       {open && (
-        <ol className="border-t border-zinc-800 divide-y divide-zinc-800">
-          {versions.map((v) => {
+        <ol style={{ borderTop: "1px solid var(--rule)" }}>
+          {versions.map((v, i) => {
             const date = new Date(v.created_at).toLocaleDateString(locale === "es" ? "es-AR" : "en-US", {
               year: "numeric",
               month: "short",
               day: "numeric",
             });
             return (
-              <li key={v.id} className="p-3 flex items-start gap-3">
+              <li
+                key={v.id}
+                className="flex items-start gap-3 p-3"
+                style={{
+                  borderTop: i === 0 ? "none" : "1px solid var(--rule-soft)",
+                  background: v.is_current ? "color-mix(in oklab, var(--accent) 6%, var(--paper))" : "var(--paper)",
+                }}
+              >
                 <div className="flex-shrink-0 mt-0.5">
-                  <span className={`inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded text-xs font-mono ${
-                    v.is_current ? "bg-amber-500 text-zinc-950" : "bg-zinc-800 text-zinc-300"
-                  }`}>
+                  <span
+                    className="mono"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: "2.5rem",
+                      padding: "2px 8px",
+                      borderRadius: 3,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      background: v.is_current ? "var(--accent)" : "var(--bg-2)",
+                      color: v.is_current ? "white" : "var(--ink-2)",
+                      border: `1px solid ${v.is_current ? "var(--accent)" : "var(--rule)"}`,
+                    }}
+                  >
                     v{v.version_number}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-zinc-200">
+                  <p style={{ fontSize: 13, color: "var(--ink)", margin: 0 }}>
                     {v.change_note ?? (v.version_number === 1 ? t("versionInitial") : "—")}
                   </p>
-                  <p className="text-xs text-zinc-600 mt-0.5">
+                  <p className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 3 }}>
                     {date} · {v.author?.display_name ?? v.author?.username ?? "—"}
                   </p>
                 </div>

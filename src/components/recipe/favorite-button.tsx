@@ -60,14 +60,11 @@ export function FavoriteButton({
       disabled={pending}
       aria-pressed={isFav}
       aria-label={isFav ? t("unfavorite") : t("favorite")}
-      className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition ${
-        isFav
-          ? "border-amber-500 bg-amber-500/10 text-amber-300"
-          : "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100"
-      }`}
+      className="btn btn-sm"
+      style={isFav ? { borderColor: "var(--accent)", color: "var(--accent)" } : {}}
     >
-      <span className="text-base leading-none">{isFav ? "★" : "☆"}</span>
-      <span>{count}</span>
+      <span style={{ fontSize: 15, lineHeight: 1 }}>{isFav ? "★" : "☆"}</span>
+      <span className="mono" style={{ fontSize: 11 }}>{count}</span>
     </button>
   );
 }

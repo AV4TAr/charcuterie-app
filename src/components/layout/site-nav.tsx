@@ -25,9 +25,15 @@ export async function SiteNav() {
             {t("explore")}
           </Link>
           {user ? (
-            <Link href="/library" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
-              {t("library")}
-            </Link>
+            <>
+              <Link href="/library" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
+                {t("library")}
+              </Link>
+              <Link href="/don-marco" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}>
+                {t("donMarco")}
+                <span className="tag tag-accent" style={{ fontSize: 8, padding: "1px 5px" }}>✦ IA</span>
+              </Link>
+            </>
           ) : (
             <Link href="/new" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
               {t("newRecipe")}

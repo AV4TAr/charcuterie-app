@@ -52,6 +52,9 @@ export async function SiteNav() {
               >
                 {user.email}
               </span>
+              <Link href="/settings" className="btn btn-sm btn-ghost">
+                {t("settings")}
+              </Link>
               <button type="submit" className="btn btn-sm btn-ghost">
                 {tAuth("signOut")}
               </button>

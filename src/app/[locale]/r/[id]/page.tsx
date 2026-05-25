@@ -124,7 +124,18 @@ export default async function RecipeDetailPage({
     }
   }
 
+  let pendingProposalsCount = 0;
+  if (isOwner) {
+    const { count } = await supabase
+      .from("proposals")
+      .select("id", { count: "exact", head: true })
+      .eq("target_recipe_id", recipe.id)
+      .eq("status", "open");
+    pendingProposalsCount = count ?? 0;
+  }
+
   const t = await getTranslations("recipe");
+  const tProposals = await getTranslations("proposals");
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -155,6 +166,13 @@ export default async function RecipeDetailPage({
                 </Link>
               </span>
             )}
+            {isOwner && pendingProposalsCount > 0 && (
+              <span className="tag tag-accent" style={{ fontSize: 9 }}>
+                {pendingProposalsCount === 1
+                  ? tProposals("pendingProposals", { count: pendingProposalsCount })
+                  : tProposals("pendingProposalsPlural", { count: pendingProposalsCount })}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -167,6 +185,10 @@ export default async function RecipeDetailPage({
           {isOwner ? (
             <Link href={`/r/${recipe.id}/edit`} className="btn btn-sm">
               {t("edit")}
+            </Link>
+          ) : recipe.forked_from_recipe_id && user ? (
+            <Link href={`/proposals/new?from=${recipe.id}`} className="btn btn-sm">
+              {tProposals("proposeChanges")}
             </Link>
           ) : (
             <ForkButton recipeId={recipe.id} userId={user?.id ?? null} />

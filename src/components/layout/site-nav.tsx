@@ -17,7 +17,7 @@ export async function SiteNav() {
     <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
         <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-2xl">🌶️</span>
+          <span className="text-2xl">🌭</span>
           <span className="text-lg font-semibold text-zinc-100 group-hover:text-amber-300 transition">
             {tApp("name")}
           </span>

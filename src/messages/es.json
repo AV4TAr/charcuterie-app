@@ -50,6 +50,38 @@
   "errors": {
     "comingSoon": "Próximamente"
   },
+  "explore": {
+    "empty": "Todavía no hay recetas",
+    "emptyHint": "¡Sé el primero en crear una!",
+    "createFirst": "Crear receta"
+  },
+  "recipe": {
+    "by": "por",
+    "title": "Título",
+    "titlePlaceholder": "Ej. Chorizo criollo",
+    "description": "Descripción",
+    "descriptionPlaceholder": "¿Qué hace especial a esta receta?",
+    "visibility": "Visibilidad",
+    "public": "Pública",
+    "private": "Privada",
+    "meatBase": "Peso base de carne",
+    "ingredients": "Ingredientes",
+    "addIngredient": "+ Agregar ingrediente",
+    "percentMode": "% de carne",
+    "absoluteMode": "Cantidad fija",
+    "mode": "Modo",
+    "value": "Cantidad",
+    "unit": "Unidad",
+    "selectIngredient": "Seleccionar ingrediente",
+    "changeNote": "Nota de versión",
+    "changeNotePlaceholder": "¿Qué cambió? (opcional)",
+    "instructions": "Instrucciones",
+    "instructionsPlaceholder": "Pasos, tips, tiempo de curado...",
+    "save": "Guardar receta",
+    "saving": "Guardando...",
+    "noIngredients": "Esta receta no tiene ingredientes todavía",
+    "version": "v{number}"
+  },
   "auth": {
     "signIn": "Ingresar",
     "magicLinkSubtitle": "Te mandamos un link mágico por email. No hace falta contraseña.",

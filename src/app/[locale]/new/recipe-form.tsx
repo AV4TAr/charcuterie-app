@@ -226,6 +226,7 @@ export function RecipeForm({
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <label className="label-lab" htmlFor="title">{t("title")} *</label>
@@ -428,11 +429,12 @@ export function RecipeForm({
         {isSubmitting ? t("saving") : isEditing ? t("saveVersion") : t("save")}
       </button>
 
-      <NewIngredientDialog
-        open={dialogRowIndex !== null}
-        onClose={() => setDialogRowIndex(null)}
-        onCreated={handleIngredientCreated}
-      />
     </form>
+    <NewIngredientDialog
+      open={dialogRowIndex !== null}
+      onClose={() => setDialogRowIndex(null)}
+      onCreated={handleIngredientCreated}
+    />
+    </>
   );
 }

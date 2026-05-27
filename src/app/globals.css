@@ -209,6 +209,13 @@ html, body {
 .input-lab::placeholder { color: var(--ink-3); }
 .input-lab.err { border-color: var(--warn); }
 
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .select-lab {
   height: 40px;
   padding: 4px 8px;

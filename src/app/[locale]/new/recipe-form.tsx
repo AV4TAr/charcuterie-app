@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
 import { toCanonical, unitsForType, MASS_UNITS, VOLUME_UNITS, LENGTH_UNITS, COUNT_UNITS, type Unit, type MeasurementType } from "@/lib/units";
+import { NewIngredientDialog, type NewIngredient } from "@/components/recipe/new-ingredient-dialog";
 
 type DbIngredient = {
   id: string;
@@ -76,9 +77,11 @@ export function RecipeForm({
   const tUnits = useTranslations("units");
   const router = useRouter();
   const [saveError, setSaveError] = useState("");
+  const [catalog, setCatalog] = useState<DbIngredient[]>(ingredients);
+  const [dialogRowIndex, setDialogRowIndex] = useState<number | null>(null);
   const isEditing = !!editing;
 
-  const firstIng = ingredients[0];
+  const firstIng = catalog[0];
   const defaultUnit = firstIng ? unitsForType(firstIng.measurement_type)[0] : "g";
 
   const { register, control, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } =
@@ -90,7 +93,23 @@ export function RecipeForm({
   const rows = watch("rows");
 
   function getIngredient(id: string) {
-    return ingredients.find((i) => i.id === id);
+    return catalog.find((i) => i.id === id);
+  }
+
+  function handleIngredientCreated(ing: NewIngredient) {
+    const updated: DbIngredient = {
+      id: ing.id,
+      name: ing.name,
+      measurement_type: ing.measurement_type,
+      default_density_g_per_ml: ing.default_density_g_per_ml,
+      category: ing.category,
+    };
+    setCatalog((prev) => [...prev, updated].sort((a, b) => a.name.localeCompare(b.name)));
+    if (dialogRowIndex !== null) {
+      setValue(`rows.${dialogRowIndex}.ingredientId`, ing.id);
+      setValue(`rows.${dialogRowIndex}.displayUnit`, unitsForType(ing.measurement_type)[0]);
+    }
+    setDialogRowIndex(null);
   }
 
   function addRow() {
@@ -259,26 +278,38 @@ export function RecipeForm({
             >
               <div className="flex-1 min-w-[160px]">
                 <span className="label-lab">{t("selectIngredient")}</span>
-                <Controller
-                  control={control}
-                  name={`rows.${index}.ingredientId`}
-                  render={({ field: f }) => (
-                    <select
-                      {...f}
-                      className="select-lab w-full"
-                      onChange={(e) => {
-                        f.onChange(e);
-                        const ing2 = getIngredient(e.target.value);
-                        const currentMode = rows[index]?.mode ?? "percent";
-                        if (ing2 && currentMode === "percent") {
-                          setValue(`rows.${index}.displayUnit`, unitsForType(ing2.measurement_type)[0]);
-                        }
-                      }}
-                    >
-                      {ingredients.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
-                    </select>
-                  )}
-                />
+                <div className="flex gap-1">
+                  <Controller
+                    control={control}
+                    name={`rows.${index}.ingredientId`}
+                    render={({ field: f }) => (
+                      <select
+                        {...f}
+                        className="select-lab"
+                        style={{ flex: 1, minWidth: 0 }}
+                        onChange={(e) => {
+                          f.onChange(e);
+                          const ing2 = getIngredient(e.target.value);
+                          const currentMode = rows[index]?.mode ?? "percent";
+                          if (ing2 && currentMode === "percent") {
+                            setValue(`rows.${index}.displayUnit`, unitsForType(ing2.measurement_type)[0]);
+                          }
+                        }}
+                      >
+                        {catalog.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
+                      </select>
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDialogRowIndex(index)}
+                    className="btn btn-sm btn-ghost"
+                    title={t("newIngredient")}
+                    style={{ padding: "0 10px", color: "var(--accent)", flexShrink: 0 }}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -386,6 +417,12 @@ export function RecipeForm({
       >
         {isSubmitting ? t("saving") : isEditing ? t("saveVersion") : t("save")}
       </button>
+
+      <NewIngredientDialog
+        open={dialogRowIndex !== null}
+        onClose={() => setDialogRowIndex(null)}
+        onCreated={handleIngredientCreated}
+      />
     </form>
   );
 }

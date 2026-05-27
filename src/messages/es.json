@@ -180,7 +180,18 @@
     "bio": "Descripción",
     "bioPlaceholder": "Charcutero aficionado desde...",
     "save": "Guardar",
-    "saved": "Guardado"
+    "saved": "Guardado",
+    "ai": "Inteligencia artificial",
+    "aiIntro": "Don Marco usa tu propia clave de Anthropic. Cada usuario controla su gasto y no hay clave centralizada.",
+    "apiKeyLabel": "Tu clave de API de Anthropic",
+    "apiKeyHint": "Se usa solo en el servidor, encriptada con AES-256-GCM. Nunca se muestra después de guardar.",
+    "apiKeyPlaceholder": "sk-ant-...",
+    "keyConnected": "Clave conectada",
+    "noKey": "Sin clave configurada",
+    "removeKey": "Eliminar clave",
+    "removing": "Eliminando…",
+    "invalidKey": "La clave tiene que empezar con sk-ant-",
+    "getKeyHint": "¿No tenés clave? Generala en console.anthropic.com → API Keys."
   },
   "proposals": {
     "title": "Propuestas",

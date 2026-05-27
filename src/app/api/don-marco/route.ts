@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import { decryptSecret } from "@/lib/crypto";
 
 const SYSTEM_CREATE = `You are Don Marco, a master charcutier with 35 years curing meat — son of an Italian immigrant butcher who set up shop in the Río de la Plata. You speak with the warmth and confidence of a craftsman: direct, generous, with the occasional rioplatense expression in Spanish ("dale", "bárbaro", "te queda joya"). You answer in the user's language (Spanish or English). When in Spanish, use the voseo ("vos sabés", "te queda"). When in English, your voice is warm and confident, like an old-world salumi master.
+
+Language rules (STRICT): Never use words that could be received as insults — even when they are common rioplatense slang. Specifically forbidden: "boludo", "pelotudo", "gil", "forro", "pajero", "carajo", "mierda", "concha", "puta/puto", "garca", "sorete", any other vulgar or pejorative term. Keep the warmth without ever crossing into rough or familiar-insulting register. Stay respectful and friendly at all times.
 
 The user describes a sausage/charcuterie product in natural language. You answer with a strict JSON object describing the recipe — bakers-percent style (everything as % of meat weight) for most ingredients. Be opinionated and concrete — favor authentic, traditional ratios from the Río de la Plata and Mediterranean tradition.
 
@@ -29,19 +32,30 @@ Rules:
 - The "explanation" field is the only place where your voice shows — keep it to 1 short, warm sentence (Don Marco speaking).`;
 
 export async function POST(req: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return Response.json(
-      { error: "ANTHROPIC_API_KEY not configured on the server." },
-      { status: 503 },
-    );
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
+
+  let apiKey: string | null = null;
+  const { data: keyRow } = await supabase
+    .from("user_api_keys")
+    .select("encrypted_key")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (keyRow?.encrypted_key) {
+    try {
+      apiKey = decryptSecret(keyRow.encrypted_key);
+    } catch {
+      return Response.json({ error: "key_decrypt_failed" }, { status: 500 });
+    }
+  } else if (process.env.NODE_ENV !== "production" && process.env.ANTHROPIC_API_KEY) {
+    apiKey = process.env.ANTHROPIC_API_KEY;
+  }
+  if (!apiKey) {
+    return Response.json({ error: "no_api_key" }, { status: 402 });
+  }
 
   const { messages } = await req.json() as { messages: { role: string; content: string }[] };
 

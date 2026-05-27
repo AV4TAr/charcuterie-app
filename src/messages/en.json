@@ -180,7 +180,18 @@
     "bio": "Bio",
     "bioPlaceholder": "Home charcutier since...",
     "save": "Save",
-    "saved": "Saved"
+    "saved": "Saved",
+    "ai": "AI integrations",
+    "aiIntro": "Don Marco uses your own Anthropic API key. Each user controls their own spend — no shared key.",
+    "apiKeyLabel": "Your Anthropic API key",
+    "apiKeyHint": "Used server-side only, encrypted at rest with AES-256-GCM. Never shown again after saving.",
+    "apiKeyPlaceholder": "sk-ant-...",
+    "keyConnected": "Key connected",
+    "noKey": "No key configured",
+    "removeKey": "Remove key",
+    "removing": "Removing…",
+    "invalidKey": "Key must start with sk-ant-",
+    "getKeyHint": "Don't have one? Create it at console.anthropic.com → API Keys."
   },
   "proposals": {
     "title": "Proposals",

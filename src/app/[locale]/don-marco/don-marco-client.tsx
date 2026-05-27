@@ -13,6 +13,7 @@ type ChatEntry = {
   user: string;
   assistantText: string;
   assistantRaw: string;
+  needsApiKey?: boolean;
 };
 
 const EXAMPLES: Record<Locale, string[]> = {
@@ -58,6 +59,8 @@ const T: Record<Locale, Record<string, string>> = {
     aiBadge: "IA · beta",
     breadcrumb: "Nueva receta · asistente",
     doneLive: "Listo. Mirá la receta en el panel de la derecha.",
+    noApiKey: "Para usar Don Marco necesitás tu propia clave de Anthropic. Andá a Ajustes y cargala.",
+    goToSettings: "Ir a Ajustes →",
   },
   en: {
     headline1: "Tell me what",
@@ -86,6 +89,8 @@ const T: Record<Locale, Record<string, string>> = {
     aiBadge: "AI · beta",
     breadcrumb: "New recipe · assistant",
     doneLive: "Done. Check the recipe on the right.",
+    noApiKey: "To use Don Marco, add your own Anthropic API key in Settings.",
+    goToSettings: "Open Settings →",
   },
 };
 
@@ -251,15 +256,28 @@ export function DonMarcoClient({ locale }: { locale: string }) {
 
       if (!res.ok) {
         const errText = await res.text();
+        let errCode = "";
         let errMsg = errText;
         try {
-          errMsg = JSON.parse(errText).error ?? errText;
+          const parsed = JSON.parse(errText);
+          errCode = parsed.error ?? "";
+          errMsg = parsed.error ?? errText;
         } catch {}
-        setHistory((h) =>
-          h.map((x, i) =>
-            i === h.length - 1 ? { ...x, assistantText: "Error: " + errMsg } : x,
-          ),
-        );
+        if (res.status === 402 && errCode === "no_api_key") {
+          setHistory((h) =>
+            h.map((x, i) =>
+              i === h.length - 1
+                ? { ...x, assistantText: t.noApiKey, needsApiKey: true }
+                : x,
+            ),
+          );
+        } else {
+          setHistory((h) =>
+            h.map((x, i) =>
+              i === h.length - 1 ? { ...x, assistantText: "Error: " + errMsg } : x,
+            ),
+          );
+        }
         setBusy(false);
         return;
       }
@@ -489,6 +507,19 @@ export function DonMarcoClient({ locale }: { locale: string }) {
                           ● ● ●
                         </span>
                       )
+                    ) : h.needsApiKey ? (
+                      <>
+                        <span>{h.assistantText}</span>
+                        <div style={{ marginTop: 10 }}>
+                          <a
+                            href={`/${lang}/settings`}
+                            className="btn btn-sm btn-primary"
+                            style={{ display: "inline-flex" }}
+                          >
+                            {t.goToSettings}
+                          </a>
+                        </div>
+                      </>
                     ) : (
                       h.assistantText
                     )}

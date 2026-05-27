@@ -22,6 +22,12 @@ export default async function SettingsPage({
     .eq("id", user!.id)
     .maybeSingle();
 
+  const { data: keyRow } = await supabase
+    .from("user_api_keys")
+    .select("user_id")
+    .eq("user_id", user!.id)
+    .maybeSingle();
+
   const t = await getTranslations("settings");
 
   return (
@@ -32,6 +38,7 @@ export default async function SettingsPage({
         bio={profile?.bio ?? null}
         username={profile?.username ?? ""}
         email={user!.email ?? ""}
+        hasApiKey={!!keyRow}
       />
     </div>
   );

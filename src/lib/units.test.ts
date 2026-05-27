@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   convert,
   fromCanonical,
+  fromIngredientCanonical,
   formatAmount,
   getMeasurementType,
   toCanonical,
+  toIngredientCanonical,
   unitsForType,
 } from "./units";
 
@@ -111,5 +113,34 @@ describe("formatAmount", () => {
     expect(formatAmount(1, "lb", "es")).toBe("1 lb");
     expect(formatAmount(1, "tsp", "es")).toBe("1 cdta");
     expect(formatAmount(1, "tsp", "en")).toBe("1 tsp");
+  });
+});
+
+describe("toIngredientCanonical / fromIngredientCanonical (cross-type via density)", () => {
+  it("preserves same-type values (mass ingredient in g)", () => {
+    expect(toIngredientCanonical(50, "g", "mass", null)).toBeCloseTo(50, 6);
+    expect(fromIngredientCanonical(50, "g", "mass", null)).toBeCloseTo(50, 6);
+  });
+
+  it("converts mass ingredient measured in tbsp via density (paprika @ 0.45 g/ml)", () => {
+    // 1 tbsp = 14.787 ml; 14.787 * 0.45 ≈ 6.65 g
+    const grams = toIngredientCanonical(1, "tbsp", "mass", 0.45);
+    expect(grams).toBeCloseTo(14.78676478125 * 0.45, 4);
+  });
+
+  it("roundtrips mass ingredient in tbsp (sal fina @ 1.2)", () => {
+    const grams = toIngredientCanonical(2, "tbsp", "mass", 1.2);
+    const back = fromIngredientCanonical(grams, "tbsp", "mass", 1.2);
+    expect(back).toBeCloseTo(2, 6);
+  });
+
+  it("converts volume ingredient measured in g via density (wine @ 0.99)", () => {
+    // 99 g of wine @ 0.99 g/ml = 100 ml
+    const ml = toIngredientCanonical(99, "g", "volume", 0.99);
+    expect(ml).toBeCloseTo(100, 6);
+  });
+
+  it("falls back to within-type conversion when types match regardless of density", () => {
+    expect(toIngredientCanonical(1, "kg", "mass", 0.45)).toBeCloseTo(1000, 6);
   });
 });

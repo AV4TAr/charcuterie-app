@@ -60,7 +60,8 @@ export function NewIngredientDialog({ open, initialName, onClose, onCreated }: P
     setSubmitting(true);
 
     const supabase = createClient();
-    const densityNum = type === "volume" && density.trim() ? Number(density) : null;
+    const densityNum =
+      (type === "volume" || type === "mass") && density.trim() ? Number(density) : null;
 
     const { data, error: insErr } = await supabase
       .from("ingredients")
@@ -190,7 +191,7 @@ export function NewIngredientDialog({ open, initialName, onClose, onCreated }: P
             </div>
           </div>
 
-          {type === "volume" && (
+          {(type === "volume" || type === "mass") && (
             <div>
               <label className="label-lab">{t("ingredientDensity")}</label>
               <input
@@ -201,11 +202,11 @@ export function NewIngredientDialog({ open, initialName, onClose, onCreated }: P
                 max="2"
                 value={density}
                 onChange={(e) => setDensity(e.target.value)}
-                placeholder="1.00"
-                style={{ marginTop: 6, width: 120 }}
+                placeholder={type === "mass" ? "Ej. 0.45 (pimentón)" : "1.00"}
+                style={{ marginTop: 6, width: 200 }}
               />
               <p className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 4, lineHeight: 1.5 }}>
-                {t("ingredientDensityHint")}
+                {type === "mass" ? t("ingredientDensityHintMass") : t("ingredientDensityHint")}
               </p>
             </div>
           )}

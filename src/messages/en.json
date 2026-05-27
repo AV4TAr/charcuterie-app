@@ -108,6 +108,7 @@
     "ingredientType": "Type",
     "ingredientDensity": "Density (g/ml, optional)",
     "ingredientDensityHint": "For liquids: how many grams 1 ml weighs. Wine ≈ 0.99, oil ≈ 0.92.",
+    "ingredientDensityHintMass": "Optional. Set this if you want to measure this ingredient in tbsp/cup too. Paprika ≈ 0.45, fine salt ≈ 1.2, dried oregano ≈ 0.15.",
     "categoryMeat": "Meat",
     "categorySpice": "Spice",
     "categoryCure": "Cure",

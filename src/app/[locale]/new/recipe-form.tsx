@@ -5,7 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
-import { toCanonical, unitsForType, MASS_UNITS, VOLUME_UNITS, LENGTH_UNITS, COUNT_UNITS, type Unit, type MeasurementType } from "@/lib/units";
+import { toCanonical, toIngredientCanonical, unitsForType, MASS_UNITS, VOLUME_UNITS, type Unit, type MeasurementType } from "@/lib/units";
 import { NewIngredientDialog, type NewIngredient } from "@/components/recipe/new-ingredient-dialog";
 
 type DbIngredient = {
@@ -193,6 +193,7 @@ export function RecipeForm({
     if (validRows.length > 0) {
       const ingredientRows = validRows.map((r, i) => {
         const val = Number(r.value);
+        const ing = getIngredient(r.ingredientId);
         const common = {
           version_id: version.id,
           ingredient_id: r.ingredientId,
@@ -202,10 +203,13 @@ export function RecipeForm({
         if (r.mode === "percent") {
           return { ...common, mode: "percent" as const, percent_of_meat: val / 100, amount_canonical: null };
         }
+        const canonical = ing
+          ? toIngredientCanonical(val, r.displayUnit as Unit, ing.measurement_type, ing.default_density_g_per_ml)
+          : toCanonical(val, r.displayUnit as Unit);
         return {
           ...common,
           mode: "absolute" as const,
-          amount_canonical: toCanonical(val, r.displayUnit as Unit),
+          amount_canonical: canonical,
           percent_of_meat: null,
         };
       });
@@ -344,25 +348,31 @@ export function RecipeForm({
               <div>
                 <span className="label-lab">{t("unit")}</span>
                 <select {...register(`rows.${index}.displayUnit`)} className="select-lab" style={{ width: 96 }}>
-                  {mode === "percent" && ing ? (
-                    unitsForType(ing.measurement_type).map((u) => (
-                      <option key={u} value={u}>{u}</option>
-                    ))
+                  {ing ? (
+                    (() => {
+                      const sameType = unitsForType(ing.measurement_type);
+                      const hasDensity = !!(ing.default_density_g_per_ml && ing.default_density_g_per_ml > 0);
+                      const crossType =
+                        hasDensity && ing.measurement_type === "mass"
+                          ? VOLUME_UNITS
+                          : hasDensity && ing.measurement_type === "volume"
+                          ? MASS_UNITS
+                          : [];
+                      return (
+                        <>
+                          <optgroup label={tUnits(ing.measurement_type)}>
+                            {sameType.map((u) => <option key={u} value={u}>{u}</option>)}
+                          </optgroup>
+                          {crossType.length > 0 && (
+                            <optgroup label={tUnits(ing.measurement_type === "mass" ? "volume" : "mass")}>
+                              {crossType.map((u) => <option key={u} value={u}>{u}</option>)}
+                            </optgroup>
+                          )}
+                        </>
+                      );
+                    })()
                   ) : (
-                    <>
-                      <optgroup label={tUnits("mass")}>
-                        {MASS_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                      </optgroup>
-                      <optgroup label={tUnits("volume")}>
-                        {VOLUME_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                      </optgroup>
-                      <optgroup label={tUnits("length")}>
-                        {LENGTH_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                      </optgroup>
-                      <optgroup label={tUnits("count")}>
-                        {COUNT_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                      </optgroup>
-                    </>
+                    MASS_UNITS.map((u) => <option key={u} value={u}>{u}</option>)
                   )}
                 </select>
               </div>

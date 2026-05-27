@@ -1,6 +1,5 @@
 import {
-  fromCanonical,
-  getMeasurementType,
+  fromIngredientCanonical,
   toCanonical,
   type MassUnit,
   type Unit,
@@ -74,11 +73,12 @@ export function calculateIngredients(
         }
       }
 
-      const displayType = getMeasurementType(ing.displayUnit);
-      if (displayType !== ing.measurementType) {
-        ing.displayUnit = defaultUnitFor(ing.measurementType);
-      }
-      const amountInDisplayUnit = fromCanonical(canonical, ing.displayUnit);
+      const amountInDisplayUnit = fromIngredientCanonical(
+        canonical,
+        ing.displayUnit,
+        ing.measurementType,
+        ing.defaultDensityGPerMl,
+      );
 
       return {
         id: ing.id,
@@ -92,19 +92,6 @@ export function calculateIngredients(
         notes: ing.notes,
       };
     });
-}
-
-function defaultUnitFor(type: RecipeIngredient["measurementType"]): Unit {
-  switch (type) {
-    case "mass":
-      return "g";
-    case "volume":
-      return "ml";
-    case "length":
-      return "cm";
-    case "count":
-      return "piece";
-  }
 }
 
 /**

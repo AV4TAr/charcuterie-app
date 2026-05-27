@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { redirect } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
 import { RecipeForm, type RecipeFormValues } from "@/app/[locale]/new/recipe-form";
-import { fromCanonical, type MassUnit } from "@/lib/units";
+import { fromCanonical, fromIngredientCanonical, type MassUnit, type Unit, type MeasurementType } from "@/lib/units";
 import type { Locale } from "@/lib/i18n/config";
 
 export default async function EditRecipePage({
@@ -61,12 +61,18 @@ export default async function EditRecipePage({
     instructions: version.instructions ?? "",
     rows: (rows ?? []).map((r) => {
       const ing = ingredients?.find((i) => i.id === r.ingredient_id);
-      const displayUnit = r.display_unit as string;
+      const displayUnit = r.display_unit as Unit;
       let value = "0";
       if (r.mode === "percent" && r.percent_of_meat != null) {
-        value = String(Number(r.percent_of_meat) * 100);
+        value = String(Number((Number(r.percent_of_meat) * 100).toFixed(4)));
       } else if (r.amount_canonical != null && ing) {
-        value = String(fromCanonical(Number(r.amount_canonical), displayUnit as never));
+        const raw = fromIngredientCanonical(
+          Number(r.amount_canonical),
+          displayUnit,
+          ing.measurement_type as MeasurementType,
+          ing.default_density_g_per_ml,
+        );
+        value = String(Number(raw.toFixed(4)));
       }
       return {
         ingredientId: r.ingredient_id,

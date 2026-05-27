@@ -108,6 +108,7 @@
     "ingredientType": "Tipo",
     "ingredientDensity": "Densidad (g/ml, opcional)",
     "ingredientDensityHint": "Para líquidos: cuántos gramos pesa 1 ml. Vino ≈ 0.99, aceite ≈ 0.92.",
+    "ingredientDensityHintMass": "Opcional. Si lo seteás vas a poder medir este ingrediente en cdas/tazas también. Pimentón ≈ 0.45, sal fina ≈ 1.2, orégano seco ≈ 0.15.",
     "categoryMeat": "Carne",
     "categorySpice": "Especia",
     "categoryCure": "Curante",

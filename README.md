@@ -2,6 +2,8 @@
 
 Aplicación web (PWA instalable) para gestionar recetas de chorizo y embutidos con cálculos automáticos de ingredientes según el peso de carne disponible. Pensada con dinámica comunitaria estilo GitHub: forks, proposals (PRs), versiones, favoritos, ratings y comentarios.
 
+**Producción:** https://charcuterie-app.vercel.app
+
 ## Características
 
 - **Calculadora multi-unidad**: ingresá el peso de carne en `kg`, `g`, `oz` o `lb` y la app escala automáticamente todos los ingredientes.

@@ -64,7 +64,7 @@ export default async function EditRecipePage({
       const displayUnit = r.display_unit as Unit;
       let value = "0";
       if (r.mode === "percent" && r.percent_of_meat != null) {
-        value = String(Number((Number(r.percent_of_meat) * 100).toFixed(4)));
+        value = String(Number((Number(r.percent_of_meat) * 100).toFixed(2)));
       } else if (r.amount_canonical != null && ing) {
         const raw = fromIngredientCanonical(
           Number(r.amount_canonical),

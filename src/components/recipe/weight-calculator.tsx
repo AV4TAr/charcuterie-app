@@ -110,7 +110,7 @@ export function WeightCalculator({
                   <div style={{ fontWeight: 500, color: "var(--ink)", fontSize: 13 }}>{row.name}</div>
                   <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>
                     {row.mode === "percent"
-                      ? `${row.percentOfMeat}% ${t("percentMode").toLowerCase()}`
+                      ? `${Number((row.percentOfMeat ?? 0).toFixed(2))}% ${t("percentMode").toLowerCase()}`
                       : t("absoluteMode")}
                   </div>
                 </td>

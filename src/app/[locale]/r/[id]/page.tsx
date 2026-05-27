@@ -54,7 +54,7 @@ export default async function RecipeDetailPage({
       measurementType: (ing?.measurement_type ?? "mass") as RecipeIngredient["measurementType"],
       defaultDensityGPerMl: ing?.default_density_g_per_ml ?? null,
       mode: row.mode as "percent" | "absolute",
-      percentOfMeat: row.percent_of_meat != null ? Number(row.percent_of_meat) * 100 : null,
+      percentOfMeat: row.percent_of_meat != null ? Number((Number(row.percent_of_meat) * 100).toFixed(2)) : null,
       amountCanonical: row.amount_canonical != null ? Number(row.amount_canonical) : null,
       displayUnit: row.display_unit as Unit,
       notes: row.notes ?? null,

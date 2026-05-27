@@ -191,7 +191,10 @@
     "removeKey": "Eliminar clave",
     "removing": "Eliminando…",
     "invalidKey": "La clave tiene que empezar con sk-ant-",
-    "getKeyHint": "¿No tenés clave? Generala en console.anthropic.com → API Keys."
+    "getKeyHint": "¿No tenés clave? Generala en console.anthropic.com → API Keys.",
+    "errorEncryptionNotConfigured": "El servidor no tiene configurada la clave de encripción. Avisale al admin.",
+    "errorTableMissing": "Falta aplicar una migración en la base de datos. Avisale al admin.",
+    "errorUnauthenticated": "Sesión expirada. Volvé a ingresar."
   },
   "proposals": {
     "title": "Propuestas",

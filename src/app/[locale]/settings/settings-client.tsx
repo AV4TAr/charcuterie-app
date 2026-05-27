@@ -91,6 +91,15 @@ export function SettingsClient({ displayName, bio, username, email, hasApiKey }:
   );
 }
 
+function humanizeError(code: string | undefined, t: (key: string) => string): string {
+  if (!code) return "Error";
+  if (code === "invalid_format") return t("invalidKey");
+  if (code === "encryption_not_configured") return t("errorEncryptionNotConfigured");
+  if (code === "table_missing") return t("errorTableMissing");
+  if (code === "unauthenticated") return t("errorUnauthenticated");
+  return code;
+}
+
 function ApiKeySection({ hasApiKey: initialHasKey }: { hasApiKey: boolean }) {
   const t = useTranslations("settings");
   const [hasKey, setHasKey] = useState(initialHasKey);
@@ -110,14 +119,18 @@ function ApiKeySection({ hasApiKey: initialHasKey }: { hasApiKey: boolean }) {
       return;
     }
     startSave(async () => {
-      const res = await saveApiKey(value);
-      if (!res.ok) {
-        setError(res.error === "invalid_format" ? t("invalidKey") : res.error ?? "error");
-        return;
+      try {
+        const res = await saveApiKey(value);
+        if (!res.ok) {
+          setError(humanizeError(res.error, t));
+          return;
+        }
+        setKeyInput("");
+        setHasKey(true);
+        setSaved(true);
+      } catch (e) {
+        setError(humanizeError(String(e), t));
       }
-      setKeyInput("");
-      setHasKey(true);
-      setSaved(true);
     });
   }
 
@@ -125,12 +138,16 @@ function ApiKeySection({ hasApiKey: initialHasKey }: { hasApiKey: boolean }) {
     setError(null);
     setSaved(false);
     startDelete(async () => {
-      const res = await deleteApiKey();
-      if (!res.ok) {
-        setError(res.error ?? "error");
-        return;
+      try {
+        const res = await deleteApiKey();
+        if (!res.ok) {
+          setError(humanizeError(res.error, t));
+          return;
+        }
+        setHasKey(false);
+      } catch (e) {
+        setError(humanizeError(String(e), t));
       }
-      setHasKey(false);
     });
   }
 

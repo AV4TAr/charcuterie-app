@@ -14,7 +14,14 @@ export async function saveApiKey(key: string): Promise<{ ok: boolean; error?: st
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "unauthenticated" };
 
-  const encrypted = encryptSecret(trimmed);
+  let encrypted: string;
+  try {
+    encrypted = encryptSecret(trimmed);
+  } catch (e) {
+    console.error("[saveApiKey] encryption failed:", e);
+    return { ok: false, error: "encryption_not_configured" };
+  }
+
   const { error } = await supabase
     .from("user_api_keys")
     .upsert(
@@ -22,7 +29,13 @@ export async function saveApiKey(key: string): Promise<{ ok: boolean; error?: st
       { onConflict: "user_id" },
     );
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[saveApiKey] supabase error:", error);
+    if (error.code === "42P01" || error.message?.includes("does not exist")) {
+      return { ok: false, error: "table_missing" };
+    }
+    return { ok: false, error: error.message };
+  }
 
   revalidatePath("/settings");
   return { ok: true };
@@ -34,7 +47,13 @@ export async function deleteApiKey(): Promise<{ ok: boolean; error?: string }> {
   if (!user) return { ok: false, error: "unauthenticated" };
 
   const { error } = await supabase.from("user_api_keys").delete().eq("user_id", user.id);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[deleteApiKey] supabase error:", error);
+    if (error.code === "42P01" || error.message?.includes("does not exist")) {
+      return { ok: false, error: "table_missing" };
+    }
+    return { ok: false, error: error.message };
+  }
 
   revalidatePath("/settings");
   return { ok: true };

@@ -66,6 +66,13 @@ function matchIngredient(name: string, catalog: DbIngredient[]): DbIngredient | 
   return contains ?? null;
 }
 
+function inferMeasurementType(unit: string): "mass" | "volume" | "length" | "count" {
+  if (["g", "kg", "oz", "lb"].includes(unit)) return "mass";
+  if (["ml", "l", "floz", "tsp", "tbsp", "cup"].includes(unit)) return "volume";
+  if (["cm", "m"].includes(unit)) return "length";
+  return "count";
+}
+
 // ─── Ingredient combobox ────────────────────────────────────────────────────
 
 function IngredientCombobox({
@@ -236,23 +243,36 @@ function AIImportPanel({
     }
   }
 
-  function handleAdd() {
+  const [adding, setAdding] = useState(false);
+
+  async function handleAdd() {
     if (!preview) return;
-    const newRows: Row[] = preview
-      .filter((p) => p.matchedId)
-      .map((p) => ({
-        ingredientId: p.matchedId!,
-        mode: "absolute" as const,
-        value: String(p.amount),
-        displayUnit: p.unit,
-        scaleWithMeat: true,
-      }));
+    setAdding(true);
+    const supabase = createClient();
+    const newRows: Row[] = [];
+    for (const p of preview) {
+      let id = p.matchedId;
+      if (!id) {
+        const measurementType = inferMeasurementType(p.unit);
+        const { data } = await supabase
+          .from("ingredients")
+          .insert({ name: p.name, category: "other", measurement_type: measurementType })
+          .select("id")
+          .single();
+        if (data) id = data.id;
+      }
+      if (id) {
+        newRows.push({ ingredientId: id, mode: "absolute", value: String(p.amount), displayUnit: p.unit, scaleWithMeat: true });
+      }
+    }
+    setAdding(false);
     onAdd(newRows);
     onClose();
   }
 
   const matchedCount = preview?.filter((p) => p.matchedId).length ?? 0;
   const unmatchedCount = preview?.filter((p) => !p.matchedId).length ?? 0;
+  const totalCount = matchedCount + unmatchedCount;
 
   return (
     <div style={{
@@ -331,8 +351,8 @@ function AIImportPanel({
                     {p.matchedId ? (
                       <span style={{ color: "var(--good)", fontFamily: "var(--mono)", fontSize: 11 }}>✓ {p.matchedName}</span>
                     ) : (
-                      <span style={{ color: "var(--warn)", fontFamily: "var(--mono)", fontSize: 11 }}>
-                        {isEs ? "✗ no encontrado" : "✗ not found"}
+                      <span style={{ color: "var(--accent)", fontFamily: "var(--mono)", fontSize: 11 }}>
+                        ✦ {isEs ? "nuevo" : "new"}
                       </span>
                     )}
                   </td>
@@ -344,8 +364,8 @@ function AIImportPanel({
           {unmatchedCount > 0 && (
             <p style={{ fontSize: 11, color: "var(--ink-3)", marginBottom: 8, fontFamily: "var(--mono)" }}>
               {isEs
-                ? `${unmatchedCount} ingrediente${unmatchedCount > 1 ? "s" : ""} no encontrado${unmatchedCount > 1 ? "s" : ""} en el catálogo — no se van a agregar.`
-                : `${unmatchedCount} ingredient${unmatchedCount > 1 ? "s" : ""} not found in catalog — will be skipped.`}
+                ? `${unmatchedCount} ingrediente${unmatchedCount > 1 ? "s" : ""} nuevo${unmatchedCount > 1 ? "s" : ""} — se van a crear en el catálogo.`
+                : `${unmatchedCount} new ingredient${unmatchedCount > 1 ? "s" : ""} — will be added to the catalog.`}
             </p>
           )}
 
@@ -353,10 +373,12 @@ function AIImportPanel({
             <button
               type="button"
               onClick={handleAdd}
-              disabled={matchedCount === 0}
+              disabled={totalCount === 0 || adding}
               className="btn btn-sm btn-primary"
             >
-              {isEs ? `Agregar ${matchedCount} ingrediente${matchedCount !== 1 ? "s" : ""}` : `Add ${matchedCount} ingredient${matchedCount !== 1 ? "s" : ""}`}
+              {adding
+                ? (isEs ? "Agregando…" : "Adding…")
+                : (isEs ? `Agregar ${totalCount} ingrediente${totalCount !== 1 ? "s" : ""}` : `Add ${totalCount} ingredient${totalCount !== 1 ? "s" : ""}`)}
             </button>
             <button type="button" onClick={() => setPreview(null)} className="btn btn-sm btn-ghost">
               {isEs ? "← Editar texto" : "← Edit text"}

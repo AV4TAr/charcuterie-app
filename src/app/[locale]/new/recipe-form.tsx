@@ -10,7 +10,7 @@ import { NewIngredientDialog, type NewIngredient } from "@/components/recipe/new
 import ReactMarkdown from "react-markdown";
 import { DonMarcoDisclaimerContent, DISCLAIMER_FOOTER } from "@/components/don-marco-disclaimer";
 
-type DbIngredient = {
+export type DbIngredient = {
   id: string;
   name: string;
   name_es: string | null;
@@ -1164,14 +1164,16 @@ export function RecipeForm({
         >
           {isSubmitting ? t("saving") : isEditing ? t("saveVersion") : t("save")}
         </button>
-        <button
-          type="button"
-          onClick={() => setShowAnalysis(true)}
-          className="btn btn-lg btn-ghost"
-          style={{ fontSize: 12, whiteSpace: "nowrap", color: "var(--accent)" }}
-        >
-          ✦ {locale === "en" ? "Ask Don Marco" : "Consultar a Don Marco"}
-        </button>
+        {fields.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowAnalysis(true)}
+            className="btn btn-lg btn-ghost"
+            style={{ fontSize: 12, whiteSpace: "nowrap", color: "var(--accent)" }}
+          >
+            ✦ {locale === "en" ? "Ask Don Marco" : "Consultar a Don Marco"}
+          </button>
+        )}
       </div>
 
     </form>

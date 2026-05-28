@@ -1,8 +1,8 @@
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { redirect } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
 import type { Locale } from "@/lib/i18n/config";
-import { RecipeForm } from "./recipe-form";
+import { NewRecipeChooser } from "./new-recipe-chooser";
 
 export default async function NewRecipePage({
   params,
@@ -24,12 +24,12 @@ export default async function NewRecipePage({
     supabase.from("profiles").select("don_marco_accepted_at").eq("id", user!.id).single(),
   ]);
 
-  const t = await getTranslations("nav");
-
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="serif" style={{ fontSize: 32, margin: "0 0 32px", color: "var(--ink)" }}>{t("newRecipe")}</h1>
-      <RecipeForm locale={locale} ingredients={ingredients ?? []} userId={user!.id} hasAcceptedDisclaimer={!!profile?.don_marco_accepted_at} />
-    </div>
+    <NewRecipeChooser
+      locale={locale}
+      ingredients={ingredients ?? []}
+      userId={user!.id}
+      hasAcceptedDisclaimer={!!profile?.don_marco_accepted_at}
+    />
   );
 }

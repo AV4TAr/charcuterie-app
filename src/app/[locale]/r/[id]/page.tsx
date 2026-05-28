@@ -8,6 +8,7 @@ import { RatingStars } from "@/components/recipe/rating-stars";
 import { Comments, type CommentRow } from "@/components/recipe/comments";
 import { ForkButton } from "@/components/recipe/fork-button";
 import { VersionHistory, type VersionRow } from "@/components/recipe/version-history";
+import { ShareButton } from "@/components/recipe/share-button";
 import { fromCanonical } from "@/lib/units";
 import type { Locale } from "@/lib/i18n/config";
 import type { RecipeIngredient } from "@/lib/recipes/calculator";
@@ -182,6 +183,12 @@ export default async function RecipeDetailPage({
             userId={user?.id ?? null}
             initialIsFavorited={isFavorited}
             initialCount={recipe.favorites_count ?? 0}
+          />
+          <ShareButton
+            recipeId={recipe.id}
+            isPublic={recipe.visibility === "public"}
+            isOwner={isOwner}
+            locale={locale}
           />
           {isOwner ? (
             <Link href={`/r/${recipe.id}/edit`} className="btn btn-sm">

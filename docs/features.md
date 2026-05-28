@@ -40,9 +40,15 @@
 - Locked ingredients show `*` with a footnote explaining they don't vary
 - Each ingredient displayed in its preferred display unit
 
-### Visibility
+#### Visibility
 - Public recipes visible to everyone
 - Private recipes visible to owner only (enforced via RLS)
+
+### Share links
+- Public recipes: "Compartir" copies the canonical `/r/[id]` URL to clipboard
+- Private recipes: generates a secret token (`/share/[token]`) — anyone with the link can view + use the calculator without logging in
+- Owner can revoke the secret link at any time (generates a new token on next share)
+- Share page shows a banner CTA to register; no login required to view or scale
 
 ## Ingredient catalog
 - Global shared catalog (any user can add ingredients)

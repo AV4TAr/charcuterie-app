@@ -213,7 +213,7 @@ function RecipeCard({ recipe: initial, t }: { recipe: Recipe; t: Record<string, 
                 <div style={{ display: "flex", gap: 6 }}>
                   <button
                     type="button"
-                    onClick={handleConfirm}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleConfirm(); }}
                     className="btn btn-sm btn-primary"
                     style={{ fontSize: 11, flex: 1, justifyContent: "center" }}
                   >
@@ -221,7 +221,7 @@ function RecipeCard({ recipe: initial, t }: { recipe: Recipe; t: Record<string, 
                   </button>
                   <button
                     type="button"
-                    onClick={() => setConfirming(false)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirming(false); }}
                     className="btn btn-sm btn-ghost"
                     style={{ fontSize: 11 }}
                   >

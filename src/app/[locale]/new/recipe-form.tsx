@@ -399,6 +399,38 @@ type AnalyzePayload = {
   ingredients: { name: string; mode: string; value: number; unit: string }[];
 };
 
+type ChatMessage = { role: "user" | "assistant"; content: string };
+
+async function streamSSE(
+  res: Response,
+  onChunk: (text: string) => void,
+): Promise<string> {
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let accumulated = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const data = line.slice(6).trim();
+      if (data === "[DONE]") continue;
+      try {
+        const event = JSON.parse(data);
+        if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+          accumulated += event.delta.text;
+          onChunk(accumulated);
+        }
+      } catch { /* skip malformed */ }
+    }
+  }
+  return accumulated;
+}
+
 function DonMarcoDrawer({
   open,
   onClose,
@@ -410,14 +442,23 @@ function DonMarcoDrawer({
   getPayload: () => AnalyzePayload;
   locale: string;
 }) {
-  const [text, setText] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [streamingText, setStreamingText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const isEs = locale !== "en";
+
+  function scrollToBottom() {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
 
   async function analyze() {
     setBusy(true);
-    setText("");
+    setMessages([]);
+    setStreamingText("");
     setError(null);
     try {
       const res = await fetch("/api/analyze-recipe", {
@@ -427,41 +468,54 @@ function DonMarcoDrawer({
       });
       if (res.status === 402) {
         setError(isEs ? "Configurá tu clave de Anthropic en Ajustes." : "Add your Anthropic API key in Settings.");
-        setBusy(false);
         return;
       }
       if (!res.ok) {
         setError(isEs ? "Error al analizar. Intentá de nuevo." : "Analysis failed. Try again.");
-        setBusy(false);
         return;
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let accumulated = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") continue;
-          try {
-            const event = JSON.parse(data);
-            if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
-              accumulated += event.delta.text;
-              setText(accumulated);
-            }
-          } catch { /* skip malformed */ }
-        }
-      }
+      const final = await streamSSE(res, (t) => { setStreamingText(t); scrollToBottom(); });
+      setMessages([{ role: "assistant", content: final }]);
+      setStreamingText("");
     } catch {
       setError(isEs ? "Error de red." : "Network error.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function sendMessage() {
+    const text = input.trim();
+    if (!text || busy) return;
+    setInput("");
+    const userMsg: ChatMessage = { role: "user", content: text };
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
+    setBusy(true);
+    setStreamingText("");
+    scrollToBottom();
+    try {
+      const res = await fetch("/api/recipe-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipe: getPayload(), messages: nextMessages }),
+      });
+      if (res.status === 402) {
+        setError(isEs ? "Configurá tu clave de Anthropic en Ajustes." : "Add your Anthropic API key in Settings.");
+        return;
+      }
+      if (!res.ok) {
+        setError(isEs ? "Error. Intentá de nuevo." : "Error. Try again.");
+        return;
+      }
+      const final = await streamSSE(res, (t) => { setStreamingText(t); scrollToBottom(); });
+      setMessages([...nextMessages, { role: "assistant", content: final }]);
+      setStreamingText("");
+    } catch {
+      setError(isEs ? "Error de red." : "Network error.");
+    } finally {
+      setBusy(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }
 
@@ -475,15 +529,14 @@ function DonMarcoDrawer({
 
   if (!open) return null;
 
+  const analysisComplete = messages.length > 0 && !busy;
+
   return (
     <>
       {/* Overlay */}
       <div
         onClick={onClose}
-        style={{
-          position: "fixed", inset: 0, zIndex: 40,
-          background: "rgba(0,0,0,0.3)",
-        }}
+        style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,0.3)" }}
       />
       {/* Drawer */}
       <div style={{
@@ -514,14 +567,14 @@ function DonMarcoDrawer({
             </div>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-            {!busy && text && (
+            {!busy && messages.length > 0 && (
               <button
                 type="button"
                 onClick={analyze}
                 className="btn btn-sm btn-ghost"
                 style={{ fontSize: 11 }}
               >
-                {isEs ? "↺ Volver a analizar" : "↺ Re-analyze"}
+                {isEs ? "↺ Re-analizar" : "↺ Re-analyze"}
               </button>
             )}
             <button
@@ -535,24 +588,99 @@ function DonMarcoDrawer({
           </div>
         </div>
 
-        {/* Body */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
-          {busy && !text && (
-            <div className="mono" style={{ fontSize: 13, color: "var(--ink-3)" }}>● ● ●</div>
-          )}
+        {/* Chat body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 16 }}>
           {error && (
-            <p style={{ fontSize: 13, color: "var(--warn)", fontFamily: "var(--mono)" }}>{error}</p>
+            <p style={{ fontSize: 13, color: "var(--warn)", fontFamily: "var(--mono)", margin: 0 }}>{error}</p>
           )}
-          {text && (
-            <p style={{
-              fontSize: 14, lineHeight: 1.7, color: "var(--ink)",
-              margin: 0, whiteSpace: "pre-wrap",
+
+          {messages.map((m, i) => (
+            <div key={i} style={{
+              display: "flex",
+              flexDirection: m.role === "user" ? "row-reverse" : "row",
+              alignItems: "flex-start", gap: 10,
             }}>
-              {text}
-              {busy && <span style={{ opacity: 0.4 }}>▍</span>}
-            </p>
+              {m.role === "assistant" && (
+                <span style={{
+                  width: 28, height: 28, borderRadius: 999, flexShrink: 0,
+                  background: "var(--accent)", color: "var(--paper)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "var(--serif)", fontSize: 15, fontStyle: "italic",
+                }}>M</span>
+              )}
+              <div style={{
+                maxWidth: "80%",
+                background: m.role === "user" ? "var(--accent)" : "var(--bg-2)",
+                color: m.role === "user" ? "var(--paper)" : "var(--ink)",
+                borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "4px 16px 16px 16px",
+                padding: "10px 14px",
+                fontSize: 13, lineHeight: 1.65, whiteSpace: "pre-wrap",
+              }}>
+                {m.content}
+              </div>
+            </div>
+          ))}
+
+          {/* Streaming bubble */}
+          {(busy && (streamingText || messages.length === 0)) && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <span style={{
+                width: 28, height: 28, borderRadius: 999, flexShrink: 0,
+                background: "var(--accent)", color: "var(--paper)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: "var(--serif)", fontSize: 15, fontStyle: "italic",
+              }}>M</span>
+              <div style={{
+                maxWidth: "80%",
+                background: "var(--bg-2)",
+                borderRadius: "4px 16px 16px 16px",
+                padding: "10px 14px",
+                fontSize: 13, lineHeight: 1.65,
+                color: "var(--ink)", whiteSpace: "pre-wrap",
+              }}>
+                {streamingText
+                  ? <>{streamingText}<span style={{ opacity: 0.4 }}>▍</span></>
+                  : <span className="mono" style={{ color: "var(--ink-3)" }}>● ● ●</span>
+                }
+              </div>
+            </div>
           )}
+
+          <div ref={bottomRef} />
         </div>
+
+        {/* Chat input — only after analysis */}
+        {analysisComplete && (
+          <div style={{
+            borderTop: "1px solid var(--rule)",
+            padding: "12px 16px",
+            display: "flex", gap: 8, alignItems: "flex-end",
+            flexShrink: 0,
+          }}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+              }}
+              placeholder={isEs ? "Hacé tu pregunta…" : "Ask a question…"}
+              rows={1}
+              disabled={busy}
+              className="textarea-lab"
+              style={{ flex: 1, resize: "none", fontSize: 13, minHeight: 36, maxHeight: 120 }}
+            />
+            <button
+              type="button"
+              onClick={sendMessage}
+              disabled={busy || !input.trim()}
+              className="btn btn-sm btn-primary"
+              style={{ flexShrink: 0 }}
+            >
+              {isEs ? "Enviar" : "Send"}
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

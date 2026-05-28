@@ -1,6 +1,8 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { setRequestLocale } from "next-intl/server";
+import { redirect } from "@/lib/i18n/routing";
+import { createClient } from "@/lib/supabase/server";
 import type { Locale } from "@/lib/i18n/config";
+import { NewRecipeChooser } from "./new-recipe-chooser";
 
 export default async function NewRecipePage({
   params,
@@ -9,20 +11,27 @@ export default async function NewRecipePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("nav");
-  const tErr = await getTranslations("errors");
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect({ href: "/login", locale });
+
+  const [{ data: ingredients = [] }, { data: profile }, { data: apiKeyRow }] = await Promise.all([
+    supabase.from("ingredients")
+      .select("id, name, name_es, name_en, measurement_type, default_density_g_per_ml, category")
+      .order("category").order("name"),
+    supabase.from("profiles").select("don_marco_accepted_at").eq("id", user!.id).single(),
+    supabase.from("user_api_keys").select("user_id").eq("user_id", user!.id).maybeSingle(),
+  ]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("newRecipe")}</CardTitle>
-        <CardDescription>{tErr("comingSoon")}</CardDescription>
-      </CardHeader>
-      <p className="text-sm text-zinc-400">
-        {locale === "es"
-          ? "El editor completo de recetas se construye sobre las tablas recipes / recipe_versions / recipe_version_ingredients ya definidas en supabase/migrations/. Necesita auth conectada para persistir."
-          : "The full recipe editor sits on top of the recipes / recipe_versions / recipe_version_ingredients tables already defined in supabase/migrations/. It needs auth wired up to persist."}
-      </p>
-    </Card>
+    <NewRecipeChooser
+      locale={locale}
+      ingredients={ingredients ?? []}
+      userId={user!.id}
+      hasAcceptedDisclaimer={!!profile?.don_marco_accepted_at}
+      hasAiAccess={!!apiKeyRow}
+    />
   );
 }

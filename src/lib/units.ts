@@ -124,6 +124,64 @@ export function convert(
   throw new Error(`Incompatible units: ${fromUnit} → ${toUnit}`);
 }
 
+/**
+ * Convert an `amount` expressed in `displayUnit` into the ingredient's
+ * canonical unit (g for mass, ml for volume, cm for length, count for count).
+ *
+ * If `displayUnit`'s measurement type matches `ingredientType`, this is a
+ * pure within-type conversion. If they differ (e.g. mass ingredient displayed
+ * in tbsp), `density` is used to bridge mass ↔ volume.
+ */
+export function toIngredientCanonical(
+  amount: number,
+  displayUnit: Unit,
+  ingredientType: MeasurementType,
+  density?: number | null,
+): number {
+  const displayType = getMeasurementType(displayUnit);
+  if (displayType === ingredientType) {
+    return toCanonical(amount, displayUnit);
+  }
+  if (ingredientType === "mass" && displayType === "volume") {
+    const ml = toCanonical(amount, displayUnit);
+    const d = density && density > 0 ? density : 1;
+    return ml * d;
+  }
+  if (ingredientType === "volume" && displayType === "mass") {
+    const g = toCanonical(amount, displayUnit);
+    const d = density && density > 0 ? density : 1;
+    return g / d;
+  }
+  return toCanonical(amount, displayUnit);
+}
+
+/**
+ * Inverse of `toIngredientCanonical`: given a value in the ingredient's
+ * canonical unit, returns the amount expressed in `displayUnit`.
+ */
+export function fromIngredientCanonical(
+  canonical: number,
+  displayUnit: Unit,
+  ingredientType: MeasurementType,
+  density?: number | null,
+): number {
+  const displayType = getMeasurementType(displayUnit);
+  if (displayType === ingredientType) {
+    return fromCanonical(canonical, displayUnit);
+  }
+  if (ingredientType === "mass" && displayType === "volume") {
+    const d = density && density > 0 ? density : 1;
+    const ml = canonical / d;
+    return fromCanonical(ml, displayUnit);
+  }
+  if (ingredientType === "volume" && displayType === "mass") {
+    const d = density && density > 0 ? density : 1;
+    const g = canonical * d;
+    return fromCanonical(g, displayUnit);
+  }
+  return fromCanonical(canonical, displayUnit);
+}
+
 const UNIT_LABEL_EN: Record<Unit, { short: string; long: string }> = {
   g: { short: "g", long: "grams" },
   kg: { short: "kg", long: "kilograms" },

@@ -192,7 +192,7 @@
     "removing": "Removing…",
     "invalidKey": "Key must start with sk-ant-",
     "getKeyHint": "Don't have one? Create it at console.anthropic.com → API Keys.",
-    "errorEncryptionNotConfigured": "Server is missing the encryption secret. Contact the admin.",
+    "errorEncryptionNotConfigured": "The server is missing a required configuration variable. Contact the admin.",
     "errorTableMissing": "A database migration is missing. Contact the admin.",
     "errorUnauthenticated": "Session expired. Sign in again."
   },

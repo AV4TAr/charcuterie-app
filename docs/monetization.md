@@ -29,23 +29,22 @@ Chorizo Lab es una herramienta de nicho para hobbistas. La propuesta de valor es
 
 ---
 
-### Pro — **$5 / mes** o **$48 / año** (20% descuento)
+### Plus — **$5 / mes** o **$48 / año** (20% descuento)
 Todo lo de Free, más:
 
-| Feature | Límite en Pro |
+| Feature | Límite en Plus |
 |---------|--------------|
 | Recetas privadas | ilimitadas |
 | Análisis de receta | ilimitados |
 | Importar con IA | ilimitado |
 | Don Marco chat (/don-marco) | 20 mensajes / día |
 | Follow-ups por sesión de análisis | 8 mensajes por apertura del drawer |
-| Don Marco chat (/don-marco) | 20 mensajes / día |
 | BYOK | sin ningún límite (bypasea todos los caps) |
-| Badge "Pro" en perfil | ✓ |
+| Badge "Plus" en perfil | ✓ |
 | Exportar receta a PDF | ✓ (futuro) |
 | Acceso anticipado a features | ✓ |
 
-> **Topes en Pro**: los caps de Pro (8 follow-ups por análisis, 20 msg/día en chat) protegen los tokens del sistema. El análisis de receta es una herramienta de trabajo, no un chatbot de uso general. Si alguien quiere charlar sin límite, trae su propia key. Con BYOK, desaparecen todos los caps.
+> **Topes en Plus**: los caps de Plus (8 follow-ups por análisis, 20 msg/día en chat) protegen los tokens del sistema. El análisis de receta es una herramienta de trabajo, no un chatbot de uso general. Si alguien quiere charlar sin límite, trae su propia key. Con BYOK, desaparecen todos los caps.
 
 > **Sobre el precio**: $5/mes es el punto dulce para hobbistas — menos que un café. $10/mes solo por IA es demasiado para este segmento; bundlear todo en $5 es más fácil de justificar.
 
@@ -67,7 +66,7 @@ Esto hace el trial justo: los follow-ups son parte del valor del análisis, no u
 
 ---
 
-## Costos reales de IA por usuario Pro (referencia)
+## Costos reales de IA por usuario Plus (referencia)
 
 Haiku 4.5 es muy barato:
 
@@ -78,7 +77,7 @@ Haiku 4.5 es muy barato:
 | 15 AI imports | ~30k tokens | ~$0.03 |
 | **Total** | ~210k tokens | **~$0.24/usuario/mes** |
 
-Con $5/mes por Pro, el margen de IA es ~95%. El costo operativo real es Supabase + Vercel + Stripe fees (~$0.30/transacción).
+Con $5/mes por Plus, el margen de IA es ~95%. El costo operativo real es Supabase + Vercel + Stripe fees (~$0.30/transacción).
 
 Un usuario muy activo que chatea todos los días y agota el cap diario costaría ~$0.80/mes — sigue siendo un margen del 84%.
 
@@ -89,8 +88,8 @@ Un usuario muy activo que chatea todos los días y agota el cap diario costaría
 1. Usuario nuevo tiene 10 usos en el pool.
 2. Cada análisis, import o mensaje de chat descuenta 1 del pool.
 3. Al llegar a 0, los botones de IA se deshabilitan y aparece un banner inline:
-   > *"Usaste todos tus análisis de prueba. Para seguir usando Don Marco, upgradeá a Pro o traé tu propia clave de Anthropic."*
-   > **[Pro — $5/mes]** · **[Usar mi clave →]**
+   > *"Usaste todos tus análisis de prueba. Para seguir usando Don Marco, upgradeá a Plus o traé tu propia clave de Anthropic."*
+   > **[Plus — $5/mes]** · **[Usar mi clave →]**
 4. BYOK siempre disponible, bypasea todo.
 
 ---
@@ -105,7 +104,7 @@ Un usuario muy activo que chatea todos los días y agota el cap diario costaría
 
 ---
 
-## Flujo de cap en Pro (tokens del sistema)
+## Flujo de cap en Plus (tokens del sistema)
 
 1. Al agotar los 8 follow-ups en un drawer de análisis:
    > *"Llegaste al límite de esta sesión. Abrí un nuevo análisis o traé tu propia clave para charla ilimitada."*
@@ -130,7 +129,7 @@ create table public.subscriptions (
   user_id              uuid primary key references auth.users(id) on delete cascade,
   stripe_customer_id   text unique,
   stripe_sub_id        text unique,
-  plan                 text not null default 'free',   -- 'free' | 'pro'
+  plan                 text not null default 'free',   -- 'free' | 'plus'
   status               text not null default 'active', -- 'active' | 'canceled' | 'past_due'
   current_period_end   timestamptz,
   cancel_at_period_end boolean not null default false,
@@ -140,11 +139,11 @@ create table public.subscriptions (
 
 -- Contador de uso de IA
 -- Para Free: pool vitalicio (nunca se resetea)
--- Para Pro: contador diario de mensajes en el chat (se resetea cada día)
+-- Para Plus: contador diario de mensajes en el chat (se resetea cada día)
 create table public.ai_usage (
   user_id          uuid primary key references auth.users(id) on delete cascade,
   trial_used       int  not null default 0,   -- pool vitalicio (Free)
-  chat_today       int  not null default 0,   -- mensajes hoy en /don-marco (Pro)
+  chat_today       int  not null default 0,   -- mensajes hoy en /don-marco (Plus)
   chat_date        date not null default current_date,
   updated_at       timestamptz not null default now()
 );
@@ -152,7 +151,7 @@ create table public.ai_usage (
 
 ### Lógica de caps por sesión de análisis
 
-Los follow-ups del drawer se cuentan en el **cliente** (estado local del componente `DonMarcoDrawer`). El cap de 8 aplica a todos los tiers (Free y Pro) — es un límite de UX, no de seguridad. El servidor no necesita validarlo. Con BYOK el cap no aparece.
+Los follow-ups del drawer se cuentan en el **cliente** (estado local del componente `DonMarcoDrawer`). El cap de 8 aplica a todos los tiers (Free y Plus) — es un límite de UX, no de seguridad. El servidor no necesita validarlo. Con BYOK el cap no aparece.
 
 ### RLS
 - `subscriptions`: SELECT propio, UPDATE/INSERT solo via service role (webhook).
@@ -162,8 +161,8 @@ Los follow-ups del drawer se cuentan en el **cliente** (estado local del compone
 ```
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRO_MONTHLY_PRICE_ID=price_...
-STRIPE_PRO_YEARLY_PRICE_ID=price_...
+STRIPE_PLUS_MONTHLY_PRICE_ID=price_...
+STRIPE_PLUS_YEARLY_PRICE_ID=price_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 ```
 
@@ -185,11 +184,11 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 ## Helpers en `src/lib/subscription.ts`
 
 ```ts
-// 'free' | 'pro' — fallback a 'free' si no hay fila
-getUserPlan(userId): Promise<'free' | 'pro'>
+// 'free' | 'plus' — fallback a 'free' si no hay fila
+getUserPlan(userId): Promise<'free' | 'plus'>
 
 // Verifica si puede hacer una llamada de IA nueva (análisis, import, chat)
-// Retorna { allowed, reason: 'pro' | 'byok' | 'trial' | 'exhausted' | 'daily_limit' }
+// Retorna { allowed, reason: 'plus' | 'byok' | 'trial' | 'exhausted' | 'daily_limit' }
 canUseAI(userId): Promise<{ allowed: boolean; reason: string }>
 
 // true si plan=pro o recetas privadas < 20
@@ -209,7 +208,7 @@ Se llaman server-side en API routes y server actions, nunca en el cliente.
 4. `canUseAI` verificado en todos los endpoints de IA; incremento de `trial_used` / `chat_today`
 
 ### Fase 2 — Límites en UI
-1. Banners/modales cuando se agotan trial, límite de recetas, límite diario Pro
+1. Banners/modales cuando se agotan trial, límite de recetas, límite diario Plus
 2. Cap de 8 follow-ups en `DonMarcoDrawer` (estado local)
 3. Cap de 20 msg/día en `/don-marco` chat (verificado server-side)
 
@@ -217,7 +216,7 @@ Se llaman server-side en API routes y server actions, nunca en el cliente.
 1. Página `/pricing`
 2. Stripe Checkout → webhook → plan actualizado
 3. Customer Portal (cancelar/cambiar plan)
-4. Badge Pro en perfil
+4. Badge Plus en perfil
 
 ### Fase 4 — Polish
 1. Emails via Stripe (confirmación, aviso de cancelación)
@@ -234,7 +233,7 @@ Se llaman server-side en API routes y server actions, nunca en el cliente.
 | Trial mensual vs vitalicio | Vitalicio (10 usos totales) | Crea urgencia real; mensual reduce la presión de upgrade |
 | Recetas públicas cuentan | No | Incentiva compartir, genera tráfico |
 | Cap de follow-ups (todos los tiers) | 8 por sesión, cliente (UX) | Evita complejidad server-side; con BYOK no aplica |
-| Cap diario chat en Pro | Server-side | Protege tokens reales; se resetea cada día |
+| Cap diario chat en Plus | Server-side | Protege tokens reales; se resetea cada día |
 | BYOK | Sin ningún límite | Son power users, no los penalizamos |
 | Precio | $5/mes · $48/año | Punto dulce hobbista; margen ~95% sobre costo IA |
 

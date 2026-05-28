@@ -115,6 +115,9 @@ Don Marco is the app's AI persona: a master charcutier with 35 years of experien
 - Opens a drawer that streams expert feedback on the current recipe
 - Checks: salt ratio (1.8–2.5% fresh / 2.5–3.0% cured), cure salt safety (0.20–0.25%), spice balance, technique tips
 - Max ~200 words, flowing text
+- After analysis, a chat input appears for contextual follow-up questions
+- Full recipe context + conversation history sent on each turn
+- Enter to send, Shift+Enter for new line; "↺ Re-analyze" clears and restarts
 
 ### AI ingredient import (edit mode)
 - "✦ Importar con IA" panel in the ingredient editor

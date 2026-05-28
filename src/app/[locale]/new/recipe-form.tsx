@@ -749,6 +749,7 @@ export function RecipeForm({
   editing,
   initialValues,
   hasAcceptedDisclaimer,
+  hasAiAccess = true,
 }: {
   locale: string;
   ingredients: DbIngredient[];
@@ -756,6 +757,7 @@ export function RecipeForm({
   editing?: EditingContext;
   initialValues?: Partial<RecipeFormValues>;
   hasAcceptedDisclaimer?: boolean;
+  hasAiAccess?: boolean;
 }) {
   const t = useTranslations("recipe");
   const tUnits = useTranslations("units");
@@ -1165,14 +1167,25 @@ export function RecipeForm({
           {isSubmitting ? t("saving") : isEditing ? t("saveVersion") : t("save")}
         </button>
         {fields.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowAnalysis(true)}
-            className="btn btn-lg btn-ghost"
-            style={{ fontSize: 12, whiteSpace: "nowrap", color: "var(--accent)" }}
-          >
-            ✦ {locale === "en" ? "Ask Don Marco" : "Consultar a Don Marco"}
-          </button>
+          hasAiAccess ? (
+            <button
+              type="button"
+              onClick={() => setShowAnalysis(true)}
+              className="btn btn-lg btn-ghost"
+              style={{ fontSize: 12, whiteSpace: "nowrap", color: "var(--accent)" }}
+            >
+              ✦ {locale === "en" ? "Ask Don Marco" : "Consultar a Don Marco"}
+            </button>
+          ) : (
+            <a
+              href={`/${locale}/settings`}
+              className="btn btn-lg btn-ghost"
+              style={{ fontSize: 12, whiteSpace: "nowrap", color: "var(--ink-3)" }}
+              title={locale === "en" ? "Add your Anthropic key in Settings" : "Configurá tu clave en Ajustes"}
+            >
+              ✦ {locale === "en" ? "Ask Don Marco" : "Consultar a Don Marco"}
+            </a>
+          )
         )}
       </div>
 

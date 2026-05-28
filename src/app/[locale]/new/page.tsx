@@ -17,11 +17,12 @@ export default async function NewRecipePage({
 
   if (!user) redirect({ href: "/login", locale });
 
-  const [{ data: ingredients = [] }, { data: profile }] = await Promise.all([
+  const [{ data: ingredients = [] }, { data: profile }, { data: apiKeyRow }] = await Promise.all([
     supabase.from("ingredients")
       .select("id, name, name_es, name_en, measurement_type, default_density_g_per_ml, category")
       .order("category").order("name"),
     supabase.from("profiles").select("don_marco_accepted_at").eq("id", user!.id).single(),
+    supabase.from("user_api_keys").select("user_id").eq("user_id", user!.id).maybeSingle(),
   ]);
 
   return (
@@ -30,6 +31,7 @@ export default async function NewRecipePage({
       ingredients={ingredients ?? []}
       userId={user!.id}
       hasAcceptedDisclaimer={!!profile?.don_marco_accepted_at}
+      hasAiAccess={!!apiKeyRow}
     />
   );
 }

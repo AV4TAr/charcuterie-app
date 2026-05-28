@@ -10,6 +10,8 @@ const T = {
     question: "¿Cómo querés empezar?",
     aiTitle: "Con Don Marco",
     aiDesc: "Describí el chorizo que querés y Don Marco arma la fórmula por vos. Podés ajustarla después.",
+    aiNoKey: "Requiere una clave de Anthropic.",
+    aiNoKeyLink: "Configurar en Ajustes →",
     manualTitle: "Armar manual",
     manualDesc: "Empezá con el formulario y agregá tus ingredientes a tu ritmo.",
   },
@@ -18,6 +20,8 @@ const T = {
     question: "How do you want to start?",
     aiTitle: "With Don Marco",
     aiDesc: "Describe the sausage you want and Don Marco drafts the formula. You can tweak it afterwards.",
+    aiNoKey: "Requires an Anthropic API key.",
+    aiNoKeyLink: "Set up in Settings →",
     manualTitle: "Build manually",
     manualDesc: "Start with the form and add your ingredients at your own pace.",
   },
@@ -28,11 +32,13 @@ export function NewRecipeChooser({
   ingredients,
   userId,
   hasAcceptedDisclaimer,
+  hasAiAccess,
 }: {
   locale: string;
   ingredients: DbIngredient[];
   userId: string;
   hasAcceptedDisclaimer: boolean;
+  hasAiAccess: boolean;
 }) {
   const [mode, setMode] = useState<"choose" | "form">("choose");
   const router = useRouter();
@@ -50,6 +56,7 @@ export function NewRecipeChooser({
           ingredients={ingredients}
           userId={userId}
           hasAcceptedDisclaimer={hasAcceptedDisclaimer}
+          hasAiAccess={hasAiAccess}
         />
       </div>
     );
@@ -67,29 +74,29 @@ export function NewRecipeChooser({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Don Marco option */}
         <button
-          onClick={() => router.push("/don-marco")}
+          onClick={() => hasAiAccess ? router.push("/don-marco") : router.push("/settings")}
           style={{
             background: "var(--paper)",
-            border: "2px solid var(--accent)",
+            border: `2px solid ${hasAiAccess ? "var(--accent)" : "var(--rule)"}`,
             borderRadius: 12,
             padding: "28px 24px",
             textAlign: "left",
             cursor: "pointer",
             transition: "box-shadow 0.15s",
+            opacity: hasAiAccess ? 1 : 0.75,
           }}
           onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.1)")}
           onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <span
-              style={{
-                width: 32, height: 32, borderRadius: 999,
-                background: "var(--accent)", color: "var(--paper)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: "var(--serif)", fontSize: 18, fontStyle: "italic",
-                flexShrink: 0,
-              }}
-            >
+            <span style={{
+              width: 32, height: 32, borderRadius: 999,
+              background: hasAiAccess ? "var(--accent)" : "var(--rule)",
+              color: hasAiAccess ? "var(--paper)" : "var(--ink-3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "var(--serif)", fontSize: 18, fontStyle: "italic",
+              flexShrink: 0,
+            }}>
               M
             </span>
             <span style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)" }}>
@@ -99,9 +106,15 @@ export function NewRecipeChooser({
               ✦ IA
             </span>
           </div>
-          <p style={{ fontSize: 13, color: "var(--ink-2)", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: "var(--ink-2)", margin: "0 0 8px", lineHeight: 1.5 }}>
             {t.aiDesc}
           </p>
+          {!hasAiAccess && (
+            <p style={{ fontSize: 11, color: "var(--ink-3)", margin: 0, fontFamily: "var(--mono)" }}>
+              {t.aiNoKey}{" "}
+              <span style={{ color: "var(--accent)", textDecoration: "underline" }}>{t.aiNoKeyLink}</span>
+            </p>
+          )}
         </button>
 
         {/* Manual option */}

@@ -44,11 +44,12 @@ export default async function EditRecipePage({
   const meatUnit = (version.meat_base_display_unit ?? "kg") as MassUnit;
   const meatValue = fromCanonical(Number(version.meat_base_weight_grams), meatUnit);
 
-  const [{ data: ingredients = [] }, { data: profile }] = await Promise.all([
+  const [{ data: ingredients = [] }, { data: profile }, { data: apiKeyRow }] = await Promise.all([
     supabase.from("ingredients")
       .select("id, name, name_es, name_en, measurement_type, default_density_g_per_ml, category")
       .order("category").order("name"),
     supabase.from("profiles").select("don_marco_accepted_at").eq("id", user!.id).single(),
+    supabase.from("user_api_keys").select("user_id").eq("user_id", user!.id).maybeSingle(),
   ]);
 
   const t = await getTranslations("recipe");
@@ -96,6 +97,7 @@ export default async function EditRecipePage({
         editing={{ recipeId: recipe.id, currentVersionNumber: version.version_number }}
         initialValues={initialValues}
         hasAcceptedDisclaimer={!!profile?.don_marco_accepted_at}
+        hasAiAccess={!!apiKeyRow}
       />
     </div>
   );

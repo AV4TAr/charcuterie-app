@@ -7,6 +7,7 @@ import { useRouter } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
 import { toCanonical, toIngredientCanonical, unitsForType, MASS_UNITS, VOLUME_UNITS, type Unit, type MeasurementType } from "@/lib/units";
 import { NewIngredientDialog, type NewIngredient } from "@/components/recipe/new-ingredient-dialog";
+import ReactMarkdown from "react-markdown";
 
 type DbIngredient = {
   id: string;
@@ -447,13 +448,17 @@ function DonMarcoDrawer({
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const isEs = locale !== "en";
 
   function scrollToBottom() {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = bodyRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }
+
+  useEffect(() => { scrollToBottom(); }, [messages, streamingText]);
 
   async function analyze() {
     setBusy(true);
@@ -474,7 +479,7 @@ function DonMarcoDrawer({
         setError(isEs ? "Error al analizar. Intentá de nuevo." : "Analysis failed. Try again.");
         return;
       }
-      const final = await streamSSE(res, (t) => { setStreamingText(t); scrollToBottom(); });
+      const final = await streamSSE(res, (t) => { setStreamingText(t); });
       setMessages([{ role: "assistant", content: final }]);
       setStreamingText("");
     } catch {
@@ -493,7 +498,6 @@ function DonMarcoDrawer({
     setMessages(nextMessages);
     setBusy(true);
     setStreamingText("");
-    scrollToBottom();
     try {
       const res = await fetch("/api/recipe-chat", {
         method: "POST",
@@ -508,7 +512,7 @@ function DonMarcoDrawer({
         setError(isEs ? "Error. Intentá de nuevo." : "Error. Try again.");
         return;
       }
-      const final = await streamSSE(res, (t) => { setStreamingText(t); scrollToBottom(); });
+      const final = await streamSSE(res, (t) => { setStreamingText(t); });
       setMessages([...nextMessages, { role: "assistant", content: final }]);
       setStreamingText("");
     } catch {
@@ -589,7 +593,7 @@ function DonMarcoDrawer({
         </div>
 
         {/* Chat body */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div ref={bodyRef} style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 16 }}>
           {error && (
             <p style={{ fontSize: 13, color: "var(--warn)", fontFamily: "var(--mono)", margin: 0 }}>{error}</p>
           )}
@@ -614,9 +618,11 @@ function DonMarcoDrawer({
                 color: m.role === "user" ? "var(--paper)" : "var(--ink)",
                 borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "4px 16px 16px 16px",
                 padding: "10px 14px",
-                fontSize: 13, lineHeight: 1.65, whiteSpace: "pre-wrap",
+                fontSize: 13, lineHeight: 1.65,
               }}>
-                {m.content}
+                {m.role === "assistant"
+                  ? <ReactMarkdown components={{ p: ({ children }) => <p style={{ margin: "0 0 8px" }}>{children}</p>, strong: ({ children }) => <strong style={{ fontWeight: 700 }}>{children}</strong> }}>{m.content}</ReactMarkdown>
+                  : m.content}
               </div>
             </div>
           ))}
@@ -636,10 +642,10 @@ function DonMarcoDrawer({
                 borderRadius: "4px 16px 16px 16px",
                 padding: "10px 14px",
                 fontSize: 13, lineHeight: 1.65,
-                color: "var(--ink)", whiteSpace: "pre-wrap",
+                color: "var(--ink)",
               }}>
                 {streamingText
-                  ? <>{streamingText}<span style={{ opacity: 0.4 }}>▍</span></>
+                  ? <><ReactMarkdown components={{ p: ({ children }) => <p style={{ margin: "0 0 8px" }}>{children}</p>, strong: ({ children }) => <strong style={{ fontWeight: 700 }}>{children}</strong> }}>{streamingText}</ReactMarkdown><span style={{ opacity: 0.4 }}>▍</span></>
                   : <span className="mono" style={{ color: "var(--ink-3)" }}>● ● ●</span>
                 }
               </div>

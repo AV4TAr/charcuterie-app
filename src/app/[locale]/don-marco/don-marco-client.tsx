@@ -6,6 +6,7 @@ import { WeightCalculator } from "@/components/recipe/weight-calculator";
 import { saveAIRecipe, type AIRecipe, type AIIngredient } from "@/app/actions/save-ai-recipe";
 import type { RecipeIngredient } from "@/lib/recipes/calculator";
 import type { Unit } from "@/lib/units";
+import ReactMarkdown from "react-markdown";
 
 type Locale = "es" | "en";
 
@@ -518,7 +519,7 @@ export function DonMarcoClient({ locale }: { locale: string }) {
                         </div>
                       </>
                     ) : (
-                      h.assistantText
+                      <ReactMarkdown components={{ p: ({ children }) => <p style={{ margin: "0 0 8px" }}>{children}</p>, strong: ({ children }) => <strong style={{ fontWeight: 700 }}>{children}</strong> }}>{h.assistantText}</ReactMarkdown>
                     )}
                   </ChatBubble>
                 </div>

@@ -6,7 +6,7 @@ Chorizo Lab es una herramienta de nicho para hobbistas. La propuesta de valor es
 
 1. **Generoso gratis** — que la gente lo use de verdad antes de decidir pagar.
 2. **Fricción baja** — un solo click para upgradear, sin formularios complicados.
-3. **BYOK siempre disponible** — los usuarios con clave de Anthropic nunca pagan por IA, eso los mantiene contentos y evita churn en power users.
+3. **BYOK siempre sin límites** — los usuarios con clave de Anthropic hacen lo que quieran. Sin caps, sin restricciones. Son power users, no los penalizamos.
 
 ---
 
@@ -19,70 +19,97 @@ Chorizo Lab es una herramienta de nicho para hobbistas. La propuesta de valor es
 | Recetas públicas | ilimitadas |
 | Versiones por receta | ilimitadas |
 | Forks / proposals | ilimitados |
-| Don Marco (chat) | 30 mensajes de prueba totales (no por mes — se agotan una vez) |
-| Importar con IA | 5 usos de prueba totales |
-| Análisis de receta | 5 usos de prueba totales |
-| BYOK (clave propia de Anthropic) | IA ilimitada, sin costo |
+| Análisis de receta | **10 en total** (pool vitalicio) |
+| Importar con IA | del mismo pool de 10 |
+| Don Marco chat (/don-marco) | del mismo pool de 10 |
+| BYOK (clave propia de Anthropic) | sin ningún límite |
 
-> **Razonamiento**: 20 recetas es suficiente para que cualquier hobbista serio sienta el valor. El trial de Don Marco es "de por vida" (no mensual) — lo agotás, lo agotás. Eso crea urgencia real sin ser agresivo.
+> El pool de 10 es vitalicio — se agota una vez, no se renueva. Suficiente para tener 2-3 sesiones reales y sentir el valor; no tanto como para usarlo indefinidamente gratis.
 
 ---
 
 ### Pro — **$5 / mes** o **$48 / año** (20% descuento)
 Todo lo de Free, más:
 
-| Feature | Pro |
-|---------|-----|
+| Feature | Límite en Pro |
+|---------|--------------|
 | Recetas privadas | ilimitadas |
-| Don Marco (chat) | ilimitado (usa key del sistema) |
+| Análisis de receta | ilimitados |
 | Importar con IA | ilimitado |
-| Análisis de receta | ilimitado |
+| Don Marco chat (/don-marco) | 20 mensajes / día |
+| Follow-ups por sesión de análisis | 8 mensajes por apertura del drawer |
+| BYOK | sin ningún límite (bypasea todos los caps) |
 | Badge "Pro" en perfil | ✓ |
 | Exportar receta a PDF | ✓ (futuro) |
 | Acceso anticipado a features | ✓ |
 
-> **Sobre el precio**: $5/mes es el punto dulce para hobbistas — menos que un café. $10/mes solo por IA es demasiado para este segmento; bundlear todo en $5 es más fácil de justificar. Si el costo de IA sube, subimos el tier, no complicamos el modelo.
+> **Topes en Pro**: los caps de Pro (8 follow-ups por análisis, 20 msg/día en chat) protegen los tokens del sistema. El análisis de receta es una herramienta de trabajo, no un chatbot de uso general. Si alguien quiere charlar sin límite, trae su propia key. Con BYOK, desaparecen todos los caps.
+
+> **Sobre el precio**: $5/mes es el punto dulce para hobbistas — menos que un café. $10/mes solo por IA es demasiado para este segmento; bundlear todo en $5 es más fácil de justificar.
 
 ---
 
-## Costos reales de IA (referencia)
+## Qué cuenta como "uso de IA"
 
-Haiku 4.5 es barato. Estimado por usuario Pro activo:
+Solo las llamadas que abren una sesión nueva, **no los follow-ups**:
 
-| Uso | Tokens estimados/mes | Costo |
-|-----|---------------------|-------|
-| Don Marco chat (~20 mensajes) | ~40k tokens | ~$0.05 |
-| Análisis de receta (~5 análisis) | ~15k tokens | ~$0.02 |
-| AI import (~10 usos) | ~20k tokens | ~$0.02 |
-| **Total** | ~75k tokens | **~$0.09/usuario/mes** |
+| Acción | ¿Cuenta? |
+|--------|----------|
+| Abrir el drawer de análisis de receta | ✅ sí (1 uso) |
+| Mensajes de seguimiento en el drawer | ❌ no (son parte del análisis) |
+| Importar ingredientes con IA | ✅ sí (1 uso) |
+| Enviar mensaje en Don Marco chat | ✅ sí (1 uso) |
+| Re-analizar (↺) | ✅ sí (1 uso nuevo) |
 
-Con $5/mes por Pro, el margen de IA es ~98%. El costo real es Supabase + Vercel + Stripe fees (~$0.30/transacción).
-
----
-
-## Trial de Don Marco
-
-El trial sirve para crear hábito antes de mostrar la barrera de pago.
-
-**Flujo**:
-1. Usuario nuevo: 30 mensajes gratis de Don Marco (chat + análisis + import, todos cuentan juntos en un pool).
-2. Al llegar a 0: el input se deshabilita y aparece un modal/banner:
-   > *"Ya usaste tus 30 mensajes de prueba con Don Marco. Para seguir consultándolo, upgradeá a Pro o traé tu propia clave de Anthropic."*
-   > **[Ir a Pro — $5/mes]** | **[Usar mi propia clave →]**
-3. BYOK siempre bypasea el límite — importante para no alienar a power users.
-
-**Implementación**: tabla `ai_usage(user_id, count)` — incrementa con cada llamada a cualquier endpoint de IA, verifica antes de procesar. Simple, sin redis ni jobs.
+Esto hace el trial justo: los follow-ups son parte del valor del análisis, no usos separados.
 
 ---
 
-## Límite de recetas
+## Costos reales de IA por usuario Pro (referencia)
 
-**Flujo**:
-1. Al intentar crear receta #21 como Free: modal de upgrade.
-   > *"Llegaste al límite de 20 recetas en el plan gratuito. Upgradeá a Pro para recetas ilimitadas."*
+Haiku 4.5 es muy barato:
+
+| Uso estimado/mes | Tokens | Costo |
+|-----------------|--------|-------|
+| 10 análisis de receta (+ 5 follow-ups c/u) | ~60k tokens | ~$0.07 |
+| 60 mensajes en Don Marco chat (3 días/semana) | ~120k tokens | ~$0.14 |
+| 15 AI imports | ~30k tokens | ~$0.03 |
+| **Total** | ~210k tokens | **~$0.24/usuario/mes** |
+
+Con $5/mes por Pro, el margen de IA es ~95%. El costo operativo real es Supabase + Vercel + Stripe fees (~$0.30/transacción).
+
+Un usuario muy activo que chatea todos los días y agota el cap diario costaría ~$0.80/mes — sigue siendo un margen del 84%.
+
+---
+
+## Flujo de trial (Free → upgrade)
+
+1. Usuario nuevo tiene 10 usos en el pool.
+2. Cada análisis, import o mensaje de chat descuenta 1 del pool.
+3. Al llegar a 0, los botones de IA se deshabilitan y aparece un banner inline:
+   > *"Usaste todos tus análisis de prueba. Para seguir usando Don Marco, upgradeá a Pro o traé tu propia clave de Anthropic."*
+   > **[Pro — $5/mes]** · **[Usar mi clave →]**
+4. BYOK siempre disponible, bypasea todo.
+
+---
+
+## Flujo de límite de recetas (Free)
+
+1. Al intentar crear la receta #21: modal de upgrade.
+   > *"Llegaste al límite de 20 recetas en el plan gratuito."*
    > **[Ver planes]**
-2. Las recetas existentes nunca se bloquean — nunca le sacamos acceso a lo que ya tenía.
-3. Las recetas públicas no cuentan para el límite (incentivo para compartir + SEO para la app).
+2. Recetas existentes nunca se bloquean.
+3. Recetas públicas no cuentan para el límite (incentiva compartir + SEO).
+
+---
+
+## Flujo de cap en Pro (tokens del sistema)
+
+1. Al agotar los 8 follow-ups en un drawer de análisis:
+   > *"Llegaste al límite de esta sesión. Abrí un nuevo análisis o traé tu propia clave para charla ilimitada."*
+2. Al agotar los 20 mensajes diarios en el chat:
+   > *"Llegaste al límite diario de Don Marco. Volvé mañana o configurá tu propia clave de Anthropic para uso ilimitado."*
+3. Con BYOK: ningún cap aplica.
 
 ---
 
@@ -90,7 +117,7 @@ El trial sirve para crear hábito antes de mostrar la barrera de pago.
 
 ### Stripe
 - **Stripe Checkout** para el flujo de pago (hosted, maneja SCA, renovaciones, etc.)
-- **Stripe Customer Portal** para que el usuario cancele/cambie plan
+- **Stripe Customer Portal** para que el usuario cancele/cambie plan sin contactarnos
 - **Webhooks** en `/api/webhooks/stripe` para sincronizar estado de suscripción
 
 ### DB (nuevas tablas)
@@ -98,24 +125,32 @@ El trial sirve para crear hábito antes de mostrar la barrera de pago.
 ```sql
 -- Suscripción activa del usuario
 create table public.subscriptions (
-  user_id         uuid primary key references auth.users(id) on delete cascade,
-  stripe_customer_id  text unique,
-  stripe_sub_id       text unique,
-  plan            text not null default 'free',  -- 'free' | 'pro'
-  status          text not null default 'active', -- 'active' | 'canceled' | 'past_due'
-  current_period_end  timestamptz,
+  user_id              uuid primary key references auth.users(id) on delete cascade,
+  stripe_customer_id   text unique,
+  stripe_sub_id        text unique,
+  plan                 text not null default 'free',   -- 'free' | 'pro'
+  status               text not null default 'active', -- 'active' | 'canceled' | 'past_due'
+  current_period_end   timestamptz,
   cancel_at_period_end boolean not null default false,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
 );
 
--- Contador de uso de IA (para el trial y rate limiting futuro)
+-- Contador de uso de IA
+-- Para Free: pool vitalicio (nunca se resetea)
+-- Para Pro: contador diario de mensajes en el chat (se resetea cada día)
 create table public.ai_usage (
-  user_id   uuid primary key references auth.users(id) on delete cascade,
-  count     int not null default 0,
-  updated_at timestamptz not null default now()
+  user_id          uuid primary key references auth.users(id) on delete cascade,
+  trial_used       int  not null default 0,   -- pool vitalicio (Free)
+  chat_today       int  not null default 0,   -- mensajes hoy en /don-marco (Pro)
+  chat_date        date not null default current_date,
+  updated_at       timestamptz not null default now()
 );
 ```
+
+### Lógica de caps por sesión de análisis
+
+Los follow-ups del drawer se cuentan en el **cliente** (estado local del componente `DonMarcoDrawer`). El servidor no necesita saber cuántos follow-ups hubo — el cap es UX, no seguridad. Si alguien lo bypasea técnicamente, está pagando $5/mes de todos modos.
 
 ### RLS
 - `subscriptions`: SELECT propio, UPDATE/INSERT solo via service role (webhook).
@@ -136,62 +171,74 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 
 | Archivo | Descripción |
 |---------|-------------|
-| `src/app/[locale]/pricing/page.tsx` | Página de precios con tabla comparativa |
+| `src/app/[locale]/pricing/page.tsx` | Tabla de planes, botón de checkout |
 | `src/app/api/stripe/checkout/route.ts` | Crea Stripe Checkout Session |
 | `src/app/api/stripe/portal/route.ts` | Crea Customer Portal Session |
-| `src/app/api/webhooks/stripe/route.ts` | Recibe eventos de Stripe (sub creada, cancelada, renovada) |
-| `src/components/upgrade-modal.tsx` | Modal reutilizable que aparece cuando se alcanza un límite |
-| `src/lib/subscription.ts` | Helper: `getUserPlan(userId)`, `canUseAI(userId)`, `canCreateRecipe(userId)` |
+| `src/app/api/webhooks/stripe/route.ts` | Recibe eventos (sub creada/cancelada/renovada) |
+| `src/components/upgrade-modal.tsx` | Modal reutilizable por límite alcanzado |
+| `src/lib/subscription.ts` | Helpers de acceso (ver abajo) |
 
 ---
 
-## Lógica de acceso (helpers en `src/lib/subscription.ts`)
+## Helpers en `src/lib/subscription.ts`
 
 ```ts
-// Retorna 'free' | 'pro' — fallback a 'free' si no hay fila
-async function getUserPlan(userId: string): Promise<'free' | 'pro'>
+// 'free' | 'pro' — fallback a 'free' si no hay fila
+getUserPlan(userId): Promise<'free' | 'pro'>
 
-// true si plan=pro, o si tiene BYOK configurado
-async function canUseAI(userId: string): Promise<{ allowed: boolean; reason?: 'pro' | 'byok' | 'trial' | 'exhausted' }>
+// Verifica si puede hacer una llamada de IA nueva (análisis, import, chat)
+// Retorna { allowed, reason: 'pro' | 'byok' | 'trial' | 'exhausted' | 'daily_limit' }
+canUseAI(userId): Promise<{ allowed: boolean; reason: string }>
 
-// true si plan=pro, o count de recetas privadas < 20
-async function canCreateRecipe(userId: string): Promise<boolean>
+// true si plan=pro o recetas privadas < 20
+canCreateRecipe(userId): Promise<boolean>
 ```
 
-Estas funciones se llaman server-side en los API routes y server actions, nunca en el cliente.
+Se llaman server-side en API routes y server actions, nunca en el cliente.
 
 ---
 
 ## Roadmap de implementación
 
-### Fase 1 — Infraestructura (prerequisito)
+### Fase 1 — Infraestructura
 1. Migraciones `subscriptions` + `ai_usage`
-2. `src/lib/subscription.ts` con los helpers
-3. Webhook de Stripe (sincroniza plan en DB)
-4. Incremento de `ai_usage` en todos los endpoints de IA
+2. `src/lib/subscription.ts`
+3. Webhook de Stripe → sincroniza `subscriptions`
+4. `canUseAI` verificado en todos los endpoints de IA; incremento de `trial_used` / `chat_today`
 
-### Fase 2 — Límites y upgrade modal
-1. Verificar `canUseAI` antes de procesar en `/api/don-marco`, `/api/analyze-recipe`, `/api/parse-ingredients`, `/api/recipe-chat`, `/api/translate-ingredient`
-2. Verificar `canCreateRecipe` en el server action de save
-3. `<UpgradeModal>` reutilizable con copy según el límite alcanzado
+### Fase 2 — Límites en UI
+1. Banners/modales cuando se agotan trial, límite de recetas, límite diario Pro
+2. Cap de 8 follow-ups en `DonMarcoDrawer` (estado local)
+3. Cap de 20 msg/día en `/don-marco` chat (verificado server-side)
 
-### Fase 3 — Checkout + pricing page
-1. Página `/pricing` con tabla de planes
-2. Botón "Upgradear" → Stripe Checkout → webhook → plan actualizado
-3. Customer Portal para gestionar suscripción
+### Fase 3 — Checkout + pricing
+1. Página `/pricing`
+2. Stripe Checkout → webhook → plan actualizado
+3. Customer Portal (cancelar/cambiar plan)
 4. Badge Pro en perfil
 
 ### Fase 4 — Polish
-1. Emails transaccionales (confirmación de pago, aviso de cancelación) via Stripe
-2. Métricas: MRR, churn, conversión free→pro (Stripe Dashboard es suficiente inicialmente)
-3. Código de descuento para early adopters
+1. Emails via Stripe (confirmación, aviso de cancelación)
+2. Código de descuento para early adopters
+3. Métricas (Stripe Dashboard es suficiente inicialmente)
 
 ---
 
-## Preguntas abiertas
+## Decisiones tomadas
 
-- **¿Cuántos mensajes de trial?** Propongo 30 (suficiente para tener 2-3 sesiones reales con Don Marco y sentir el valor). Podés bajar a 20 si querés más urgencia.
-- **¿Las recetas públicas cuentan para el límite?** Propongo que no — incentiva compartir y genera tráfico orgánico.
-- **¿Trial mensual o vitalicio?** Propongo vitalicio (se agotan una vez). Trial mensual es más generoso pero da menos urgencia de upgrade.
-- **¿Precio anual?** $48/año ($4/mes efectivo). El descuento del 20% es estándar y mejora el LTV.
-- **¿Cómo manejamos usuarios que ya tienen recetas?** Grandfathering: si ya tenés más de 20 cuando implementemos esto, no te bloqueamos nada — el límite aplica solo a nuevas creaciones.
+| Decisión | Elección | Razonamiento |
+|----------|----------|--------------|
+| Qué cuenta en el trial | Análisis + imports + mensajes en chat (no follow-ups) | Los follow-ups son parte del análisis, no usos separados |
+| Trial mensual vs vitalicio | Vitalicio (10 usos totales) | Crea urgencia real; mensual reduce la presión de upgrade |
+| Recetas públicas cuentan | No | Incentiva compartir, genera tráfico |
+| Cap de follow-ups en Pro | Cliente (UX, no seguridad) | Evita complejidad server-side; usuario Pro ya paga |
+| Cap diario chat en Pro | Server-side | Protege tokens reales; se resetea cada día |
+| BYOK | Sin ningún límite | Son power users, no los penalizamos |
+| Precio | $5/mes · $48/año | Punto dulce hobbista; margen ~95% sobre costo IA |
+
+---
+
+## Pendiente de decidir
+
+- **¿Grandfathering?** Usuarios con >20 recetas cuando implementemos: propongo no bloquearles nada, el límite aplica solo a creaciones nuevas.
+- **¿Early adopter deal?** Un código de descuento tipo `CHORIZO2026` para los primeros N usuarios podría ayudar a validar la conversión.

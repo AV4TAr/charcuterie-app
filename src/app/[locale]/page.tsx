@@ -26,14 +26,14 @@ export default async function HomePage({
     },
     {
       num: "02",
-      head: isEs ? "Cada cambio es un commit" : "Every change is a commit",
+      head: isEs ? "Tu receta tiene memoria" : "Your recipe remembers",
       body: isEs
         ? "Subiste el ajo el verano pasado. Está ahí: v3, con tu nota y la fecha."
         : "You bumped the garlic last summer. It's there: v3, with your note and the date.",
     },
     {
       num: "03",
-      head: isEs ? "Forks y proposals" : "Forks and proposals",
+      head: isEs ? "Empezá donde alguien dejó" : "Pick up where someone left off",
       body: isEs
         ? "Partí de la receta de tu primo. Devolvele tu mejora como propuesta."
         : "Fork your cousin's recipe. Send your tweak back as a proposal.",
@@ -53,7 +53,7 @@ export default async function HomePage({
           <div>
             <div className="flex items-center gap-3 mb-6 flex-wrap">
               <span className="stamp">LAB · SPEC 04.26</span>
-              <span className="eyebrow">v0.4 · public alpha</span>
+              <span className="eyebrow">{isEs ? "v1.0 · disponible" : "v1.0 · available"}</span>
             </div>
             <h1 className="serif" style={{ fontSize: "clamp(48px, 8vw, 84px)", lineHeight: 0.95, margin: 0, letterSpacing: "-0.02em" }}>
               {isEs ? (
@@ -166,9 +166,9 @@ export default async function HomePage({
       >
         <span>Chorizo Lab · 2026</span>
         <span>·</span>
-        <span>PWA installable</span>
+        <span>{isEs ? "se instala en el celular" : "installs on your phone"}</span>
         <span>·</span>
-        <span>offline-first</span>
+        <span>{isEs ? "funciona sin internet" : "works offline"}</span>
         <span style={{ flex: 1 }} />
         <span>es · en</span>
       </footer>

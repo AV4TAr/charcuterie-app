@@ -49,7 +49,11 @@
     "browsePublic": "Explore recipes",
     "statsRecipes": "recipes",
     "statsStars": "stars",
-    "statsForks": "forks"
+    "statsForks": "forks",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "confirmMakePublic": "Make this recipe public? It will be visible to everyone.",
+    "confirmMakePrivate": "Make this recipe private? Only you will see it."
   },
   "calculator": {
     "title": "Calculator",

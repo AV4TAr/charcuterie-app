@@ -49,7 +49,11 @@
     "browsePublic": "Explorar recetas",
     "statsRecipes": "recetas",
     "statsStars": "estrellas",
-    "statsForks": "forks"
+    "statsForks": "forks",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "confirmMakePublic": "¿Hacer esta receta pública? Será visible para todos.",
+    "confirmMakePrivate": "¿Hacer esta receta privada? Solo vos podrás verla."
   },
   "calculator": {
     "title": "Calculadora",

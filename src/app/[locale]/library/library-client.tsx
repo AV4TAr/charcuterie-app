@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { Link } from "@/lib/i18n/routing";
+import { setRecipeVisibility } from "@/app/actions/recipe-visibility";
 
 type Recipe = {
   id: string;
@@ -129,10 +130,34 @@ function RecipesGrid({
   );
 }
 
-function RecipeCard({ recipe: r, t }: { recipe: Recipe; t: Record<string, string> }) {
+function RecipeCard({ recipe: initial, t }: { recipe: Recipe; t: Record<string, string> }) {
+  const [r, setR] = useState(initial);
+  const [confirming, setConfirming] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const popoverRef = useRef<HTMLDivElement>(null);
   const avg = Number(r.ratings_avg ?? 0);
   const isPublic = r.visibility === "public";
   const isForked = !!r.forked_from_recipe_id;
+  const nextVisibility = isPublic ? "private" : "public";
+
+  useEffect(() => {
+    if (!confirming) return;
+    function handleClick(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setConfirming(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [confirming]);
+
+  function handleConfirm() {
+    startTransition(async () => {
+      await setRecipeVisibility(r.id, nextVisibility);
+      setR((prev) => ({ ...prev, visibility: nextVisibility }));
+      setConfirming(false);
+    });
+  }
 
   return (
     <div className="card p-0 overflow-hidden flex flex-col">
@@ -147,25 +172,64 @@ function RecipeCard({ recipe: r, t }: { recipe: Recipe; t: Record<string, string
           >
             {r.title}
           </h2>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0" style={{ position: "relative" }}>
             {r.version_number != null && (
               <span className="tag mono" style={{ fontSize: 9 }}>v{r.version_number}</span>
             )}
-            <span
+            {/* Clickable visibility badge */}
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirming((v) => !v); }}
+              disabled={isPending}
               className="tag"
-              style={
-                isPublic
-                  ? {
-                      fontSize: 9,
-                      background: "color-mix(in oklab, var(--good) 12%, var(--paper))",
-                      borderColor: "color-mix(in oklab, var(--good) 30%, var(--rule))",
-                      color: "var(--good)",
-                    }
-                  : { fontSize: 9 }
-              }
+              style={{
+                fontSize: 9, cursor: "pointer", border: "none",
+                ...(isPublic ? {
+                  background: "color-mix(in oklab, var(--good) 12%, var(--paper))",
+                  borderColor: "color-mix(in oklab, var(--good) 30%, var(--rule))",
+                  color: "var(--good)",
+                } : {}),
+              }}
             >
-              {isPublic ? t.public : t.private}
-            </span>
+              {isPending ? "…" : isPublic ? t.public : t.private}
+            </button>
+
+            {/* Inline confirmation popover */}
+            {confirming && (
+              <div
+                ref={popoverRef}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 30,
+                  background: "var(--paper)", border: "1px solid var(--rule)",
+                  borderRadius: 8, padding: "10px 12px", minWidth: 180,
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <p style={{ fontSize: 12, color: "var(--ink-2)", margin: "0 0 8px", lineHeight: 1.4 }}>
+                  {nextVisibility === "public" ? t.confirmMakePublic : t.confirmMakePrivate}
+                </p>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    type="button"
+                    onClick={handleConfirm}
+                    className="btn btn-sm btn-primary"
+                    style={{ fontSize: 11, flex: 1, justifyContent: "center" }}
+                  >
+                    {t.confirm}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirming(false)}
+                    className="btn btn-sm btn-ghost"
+                    style={{ fontSize: 11 }}
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         {isForked && (

@@ -103,6 +103,10 @@ export default async function LibraryPage({
     public: tRec("public"),
     private: tRec("private"),
     edit: tRec("edit"),
+    confirm: t("confirm"),
+    cancel: t("cancel"),
+    confirmMakePublic: t("confirmMakePublic"),
+    confirmMakePrivate: t("confirmMakePrivate"),
   };
 
   return (

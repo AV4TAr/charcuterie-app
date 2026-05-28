@@ -368,6 +368,174 @@ function AIImportPanel({
   );
 }
 
+// ─── Don Marco analysis drawer ──────────────────────────────────────────────
+
+type AnalyzePayload = {
+  title: string;
+  meatBaseValue: number;
+  meatBaseUnit: string;
+  ingredients: { name: string; mode: string; value: number; unit: string }[];
+};
+
+function DonMarcoDrawer({
+  open,
+  onClose,
+  getPayload,
+  locale,
+}: {
+  open: boolean;
+  onClose: () => void;
+  getPayload: () => AnalyzePayload;
+  locale: string;
+}) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isEs = locale !== "en";
+
+  async function analyze() {
+    setBusy(true);
+    setText("");
+    setError(null);
+    try {
+      const res = await fetch("/api/analyze-recipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipe: getPayload() }),
+      });
+      if (res.status === 402) {
+        setError(isEs ? "Configurá tu clave de Anthropic en Ajustes." : "Add your Anthropic API key in Settings.");
+        setBusy(false);
+        return;
+      }
+      if (!res.ok) {
+        setError(isEs ? "Error al analizar. Intentá de nuevo." : "Analysis failed. Try again.");
+        setBusy(false);
+        return;
+      }
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let accumulated = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+          try {
+            const event = JSON.parse(data);
+            if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+              accumulated += event.delta.text;
+              setText(accumulated);
+            }
+          } catch { /* skip malformed */ }
+        }
+      }
+    } catch {
+      setError(isEs ? "Error de red." : "Network error.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Auto-analyze when drawer opens
+  const prevOpen = useRef(false);
+  useEffect(() => {
+    if (open && !prevOpen.current) analyze();
+    prevOpen.current = open;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, zIndex: 40,
+          background: "rgba(0,0,0,0.3)",
+        }}
+      />
+      {/* Drawer */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 50,
+        width: "min(480px, 100vw)",
+        background: "var(--paper)",
+        borderLeft: "1px solid var(--rule)",
+        display: "flex", flexDirection: "column",
+        boxShadow: "-4px 0 24px rgba(0,0,0,0.12)",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px",
+          borderBottom: "1px solid var(--rule)",
+          display: "flex", alignItems: "center", gap: 10,
+          flexShrink: 0,
+        }}>
+          <span style={{
+            width: 32, height: 32, borderRadius: 999,
+            background: "var(--accent)", color: "var(--paper)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "var(--serif)", fontSize: 18, fontStyle: "italic", flexShrink: 0,
+          }}>M</span>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>Don Marco</div>
+            <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>
+              {isEs ? "análisis de receta" : "recipe analysis"}
+            </div>
+          </div>
+          <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+            {!busy && text && (
+              <button
+                type="button"
+                onClick={analyze}
+                className="btn btn-sm btn-ghost"
+                style={{ fontSize: 11 }}
+              >
+                {isEs ? "↺ Volver a analizar" : "↺ Re-analyze"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-sm btn-ghost"
+              style={{ fontSize: 16, padding: "0 8px" }}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+          {busy && !text && (
+            <div className="mono" style={{ fontSize: 13, color: "var(--ink-3)" }}>● ● ●</div>
+          )}
+          {error && (
+            <p style={{ fontSize: 13, color: "var(--warn)", fontFamily: "var(--mono)" }}>{error}</p>
+          )}
+          {text && (
+            <p style={{
+              fontSize: 14, lineHeight: 1.7, color: "var(--ink)",
+              margin: 0, whiteSpace: "pre-wrap",
+            }}>
+              {text}
+              {busy && <span style={{ opacity: 0.4 }}>▍</span>}
+            </p>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── Main form ──────────────────────────────────────────────────────────────
 
 const EMPTY_DEFAULTS: RecipeFormValues = {
@@ -401,6 +569,7 @@ export function RecipeForm({
   const [catalog, setCatalog] = useState<DbIngredient[]>(ingredients);
   const [dialogRowIndex, setDialogRowIndex] = useState<number | null>(null);
   const [showImport, setShowImport] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
   const isEditing = !!editing;
 
   const firstIng = catalog[0];
@@ -446,6 +615,21 @@ export function RecipeForm({
 
   function handleImportAdd(newRows: Row[]) {
     newRows.forEach((r) => append(r));
+  }
+
+  function getAnalyzePayload(): AnalyzePayload {
+    const values = watch();
+    return {
+      title: values.title || (isEditing ? "Receta" : "Sin título"),
+      meatBaseValue: Number(values.meatBaseValue) || 1,
+      meatBaseUnit: values.meatBaseUnit,
+      ingredients: (values.rows ?? []).map((r) => ({
+        name: getIngredient(r.ingredientId)?.name ?? "?",
+        mode: r.mode,
+        value: Number(r.value),
+        unit: r.displayUnit,
+      })),
+    };
   }
 
   async function onSubmit(values: RecipeFormValues) {
@@ -773,16 +957,32 @@ export function RecipeForm({
 
       {saveError && <p style={{ fontSize: 13, color: "var(--warn)" }}>{saveError}</p>}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="btn btn-primary btn-lg w-full"
-        style={{ justifyContent: "center" }}
-      >
-        {isSubmitting ? t("saving") : isEditing ? t("saveVersion") : t("save")}
-      </button>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="btn btn-primary btn-lg"
+          style={{ justifyContent: "center", flex: 1 }}
+        >
+          {isSubmitting ? t("saving") : isEditing ? t("saveVersion") : t("save")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowAnalysis(true)}
+          className="btn btn-lg btn-ghost"
+          style={{ fontSize: 12, whiteSpace: "nowrap", color: "var(--accent)" }}
+        >
+          ✦ {locale === "en" ? "Ask Don Marco" : "Consultar a Don Marco"}
+        </button>
+      </div>
 
     </form>
+    <DonMarcoDrawer
+      open={showAnalysis}
+      onClose={() => setShowAnalysis(false)}
+      getPayload={getAnalyzePayload}
+      locale={locale}
+    />
     <NewIngredientDialog
       open={dialogRowIndex !== null}
       onClose={() => setDialogRowIndex(null)}

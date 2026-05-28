@@ -1,13 +1,10 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 function getKey(): Buffer {
   const raw = process.env.API_KEY_ENCRYPTION_SECRET;
   if (!raw) throw new Error("API_KEY_ENCRYPTION_SECRET is not set");
-  const key = Buffer.from(raw, "base64");
-  if (key.length !== 32) {
-    throw new Error("API_KEY_ENCRYPTION_SECRET must decode to 32 bytes (base64)");
-  }
-  return key;
+  // Derive a stable 32-byte key via SHA-256 so any string works as the secret
+  return createHash("sha256").update(raw).digest();
 }
 
 export function encryptSecret(plaintext: string): string {

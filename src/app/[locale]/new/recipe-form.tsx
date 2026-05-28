@@ -5,7 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
-import { toCanonical, toIngredientCanonical, unitsForType, MASS_UNITS, VOLUME_UNITS, type Unit, type MeasurementType } from "@/lib/units";
+import { toCanonical, toIngredientCanonical, unitsForType, unitLabel, MASS_UNITS, VOLUME_UNITS, type Unit, type MeasurementType } from "@/lib/units";
 import { NewIngredientDialog, type NewIngredient } from "@/components/recipe/new-ingredient-dialog";
 import ReactMarkdown from "react-markdown";
 
@@ -347,7 +347,7 @@ function AIImportPanel({
                 <tr key={i} style={{ borderBottom: "1px solid var(--rule-soft)" }}>
                   <td style={{ padding: "5px 8px", color: "var(--ink)" }}>{p.name}</td>
                   <td style={{ padding: "5px 8px", textAlign: "right", fontFamily: "var(--mono)", color: "var(--ink)" }}>{p.amount}</td>
-                  <td style={{ padding: "5px 8px", fontFamily: "var(--mono)", color: "var(--ink)" }}>{p.unit}</td>
+                  <td style={{ padding: "5px 8px", fontFamily: "var(--mono)", color: "var(--ink)" }}>{unitLabel(p.unit as Unit, isEs ? "es" : "en", "short")}</td>
                   <td style={{ padding: "5px 8px" }}>
                     {p.matchedId ? (
                       <span style={{ color: "var(--good)", fontFamily: "var(--mono)", fontSize: 11 }}>✓ {p.matchedName}</span>
@@ -930,7 +930,7 @@ export function RecipeForm({
           <div className="flex gap-2">
             <input type="number" step="0.001" min="0.001" {...register("meatBaseValue")} className="input-lab" style={{ width: 96 }} />
             <select {...register("meatBaseUnit")} className="select-lab" style={{ width: 80 }}>
-              {MASS_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+              {MASS_UNITS.map((u) => <option key={u} value={u}>{unitLabel(u, locale as "es" | "en", "short")}</option>)}
             </select>
           </div>
         </div>
@@ -1037,18 +1037,18 @@ export function RecipeForm({
                       return (
                         <>
                           <optgroup label={tUnits(ing.measurement_type)}>
-                            {sameType.map((u) => <option key={u} value={u}>{u}</option>)}
+                            {sameType.map((u) => <option key={u} value={u}>{unitLabel(u, locale as "es" | "en", "short")}</option>)}
                           </optgroup>
                           {crossType.length > 0 && (
                             <optgroup label={tUnits(ing.measurement_type === "mass" ? "volume" : "mass")}>
-                              {crossType.map((u) => <option key={u} value={u}>{u}</option>)}
+                              {crossType.map((u) => <option key={u} value={u}>{unitLabel(u, locale as "es" | "en", "short")}</option>)}
                             </optgroup>
                           )}
                         </>
                       );
                     })()
                   ) : (
-                    MASS_UNITS.map((u) => <option key={u} value={u}>{u}</option>)
+                    MASS_UNITS.map((u) => <option key={u} value={u}>{unitLabel(u, locale as "es" | "en", "short")}</option>)
                   )}
                 </select>
               </div>

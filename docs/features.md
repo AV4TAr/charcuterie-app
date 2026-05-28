@@ -5,6 +5,8 @@
 - Google OAuth
 - Session handled via Supabase SSR middleware
 - Auth-gated pages redirect to `/login`
+- Login redirects to `/library` (Mi cuaderno)
+- Logout always redirects to `/`
 
 ## Internationalization
 - Spanish (default, rioplatense voseo) and English
@@ -43,6 +45,7 @@
 #### Visibility
 - Public recipes visible to everyone
 - Private recipes visible to owner only (enforced via RLS)
+- Toggle inline from `/library` (no new version) — click the visibility badge on a card, confirm in popover
 
 ### Share links
 - Public recipes: "Compartir" copies the canonical `/r/[id]` URL to clipboard
@@ -55,6 +58,7 @@
 - Categories: meat, cure, spice, herb, liquid, casing, other
 - Measurement types: mass, volume, length, count
 - Optional density (g/ml) for cross-type conversion (e.g. wine in % of meat weight → ml)
+- Bulk densities seeded for spices/herbs so they can be entered in tsp/tbsp/cup
 - Pre-seeded with common Spanish and English charcuterie ingredients (~90 entries)
 
 ## Multi-unit support
@@ -110,6 +114,16 @@ All values stored in canonical base units (g, ml, cm, count) and displayed in th
 ## AI — Don Marco
 Don Marco is the app's AI persona: a master charcutier with 35 years of experience, son of an Italian immigrant butcher in the Río de la Plata. Responds warmly in the user's language, using voseo in Spanish.
 
+### Disclaimer
+- Modal shown on first use; acceptance stored on `profiles.don_marco_accepted_at`
+- Footer disclaimer line on every chat block reminding the user that suggestions are guidance and use is at their own responsibility
+- Disclaimer text in both locales
+
+### New-recipe flow (`/new`)
+- Chooser screen lets the user pick between Don Marco or manual form
+- Don Marco card is disabled (with link to Settings) when the user has no API key
+- Manual option opens the form directly
+
 ### Chat (`/don-marco`)
 - Streaming chat with Don Marco
 - Example prompts populate the input box for editing before sending
@@ -117,7 +131,8 @@ Don Marco is the app's AI persona: a master charcutier with 35 years of experien
 - On 402 (no API key): shows inline link to Settings
 
 ### Recipe analysis (edit mode)
-- "✦ Consultar a Don Marco" button in the recipe editor
+- "✦ Consultar a Don Marco" button in the recipe editor (only when ingredients exist)
+- Gated by API key — if missing, the button links to Settings instead of opening the drawer
 - Opens a drawer that streams expert feedback on the current recipe
 - Checks: salt ratio (1.8–2.5% fresh / 2.5–3.0% cured), cure salt safety (0.20–0.25%), spice balance, technique tips
 - Max ~200 words, flowing text

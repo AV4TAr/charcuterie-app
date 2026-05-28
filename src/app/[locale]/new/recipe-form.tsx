@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toCanonical, toIngredientCanonical, unitsForType, unitLabel, MASS_UNITS, VOLUME_UNITS, type Unit, type MeasurementType } from "@/lib/units";
 import { NewIngredientDialog, type NewIngredient } from "@/components/recipe/new-ingredient-dialog";
 import ReactMarkdown from "react-markdown";
+import { DonMarcoDisclaimerContent, DISCLAIMER_FOOTER } from "@/components/don-marco-disclaimer";
 
 type DbIngredient = {
   id: string;
@@ -464,12 +465,15 @@ function DonMarcoDrawer({
   onClose,
   getPayload,
   locale,
+  hasAccepted: initialAccepted,
 }: {
   open: boolean;
   onClose: () => void;
   getPayload: () => AnalyzePayload;
   locale: string;
+  hasAccepted: boolean;
 }) {
+  const [accepted, setAccepted] = useState(initialAccepted);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -550,13 +554,13 @@ function DonMarcoDrawer({
     }
   }
 
-  // Auto-analyze when drawer opens
+  // Auto-analyze when drawer opens (only if disclaimer was accepted)
   const prevOpen = useRef(false);
   useEffect(() => {
-    if (open && !prevOpen.current) analyze();
+    if (open && !prevOpen.current && accepted) analyze();
     prevOpen.current = open;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, accepted]);
 
   if (!open) return null;
 
@@ -621,7 +625,13 @@ function DonMarcoDrawer({
 
         {/* Chat body */}
         <div ref={bodyRef} style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {error && (
+          {!accepted && (
+            <DonMarcoDisclaimerContent
+              locale={locale}
+              onAccepted={() => { setAccepted(true); analyze(); }}
+            />
+          )}
+          {accepted && error && (
             <p style={{ fontSize: 13, color: "var(--warn)", fontFamily: "var(--mono)", margin: 0 }}>{error}</p>
           )}
 
@@ -683,35 +693,35 @@ function DonMarcoDrawer({
         </div>
 
         {/* Chat input — only after analysis */}
-        {analysisComplete && (
-          <div style={{
-            borderTop: "1px solid var(--rule)",
-            padding: "12px 16px",
-            display: "flex", gap: 8, alignItems: "flex-end",
-            flexShrink: 0,
-          }}>
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-              }}
-              placeholder={isEs ? "Hacé tu pregunta…" : "Ask a question…"}
-              rows={1}
-              disabled={busy}
-              className="textarea-lab"
-              style={{ flex: 1, resize: "none", fontSize: 13, minHeight: 36, maxHeight: 120 }}
-            />
-            <button
-              type="button"
-              onClick={sendMessage}
-              disabled={busy || !input.trim()}
-              className="btn btn-sm btn-primary"
-              style={{ flexShrink: 0 }}
-            >
-              {isEs ? "Enviar" : "Send"}
-            </button>
+        {accepted && analysisComplete && (
+          <div style={{ borderTop: "1px solid var(--rule)", padding: "12px 16px 8px", flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 8 }}>
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+                }}
+                placeholder={isEs ? "Hacé tu pregunta…" : "Ask a question…"}
+                rows={1}
+                disabled={busy}
+                className="textarea-lab"
+                style={{ flex: 1, resize: "none", fontSize: 13, minHeight: 36, maxHeight: 120 }}
+              />
+              <button
+                type="button"
+                onClick={sendMessage}
+                disabled={busy || !input.trim()}
+                className="btn btn-sm btn-primary"
+                style={{ flexShrink: 0 }}
+              >
+                {isEs ? "Enviar" : "Send"}
+              </button>
+            </div>
+            <p style={{ margin: 0, fontSize: 10, color: "var(--ink-3)", lineHeight: 1.4, fontFamily: "var(--mono)" }}>
+              {DISCLAIMER_FOOTER[isEs ? "es" : "en"]}
+            </p>
           </div>
         )}
       </div>
@@ -738,12 +748,14 @@ export function RecipeForm({
   userId,
   editing,
   initialValues,
+  hasAcceptedDisclaimer,
 }: {
   locale: string;
   ingredients: DbIngredient[];
   userId: string;
   editing?: EditingContext;
   initialValues?: Partial<RecipeFormValues>;
+  hasAcceptedDisclaimer?: boolean;
 }) {
   const t = useTranslations("recipe");
   const tUnits = useTranslations("units");
@@ -1168,6 +1180,7 @@ export function RecipeForm({
       onClose={() => setShowAnalysis(false)}
       getPayload={getAnalyzePayload}
       locale={locale}
+      hasAccepted={hasAcceptedDisclaimer ?? false}
     />
     <NewIngredientDialog
       open={dialogRowIndex !== null}

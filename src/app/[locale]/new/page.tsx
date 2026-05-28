@@ -17,18 +17,19 @@ export default async function NewRecipePage({
 
   if (!user) redirect({ href: "/login", locale });
 
-  const { data: ingredients = [] } = await supabase
-    .from("ingredients")
-    .select("id, name, name_es, name_en, measurement_type, default_density_g_per_ml, category")
-    .order("category")
-    .order("name");
+  const [{ data: ingredients = [] }, { data: profile }] = await Promise.all([
+    supabase.from("ingredients")
+      .select("id, name, name_es, name_en, measurement_type, default_density_g_per_ml, category")
+      .order("category").order("name"),
+    supabase.from("profiles").select("don_marco_accepted_at").eq("id", user!.id).single(),
+  ]);
 
   const t = await getTranslations("nav");
 
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="serif" style={{ fontSize: 32, margin: "0 0 32px", color: "var(--ink)" }}>{t("newRecipe")}</h1>
-      <RecipeForm locale={locale} ingredients={ingredients ?? []} userId={user!.id} />
+      <RecipeForm locale={locale} ingredients={ingredients ?? []} userId={user!.id} hasAcceptedDisclaimer={!!profile?.don_marco_accepted_at} />
     </div>
   );
 }

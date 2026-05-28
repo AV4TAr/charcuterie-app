@@ -7,6 +7,7 @@ import { saveAIRecipe, type AIRecipe, type AIIngredient } from "@/app/actions/sa
 import type { RecipeIngredient } from "@/lib/recipes/calculator";
 import type { Unit } from "@/lib/units";
 import ReactMarkdown from "react-markdown";
+import { DonMarcoDisclaimerContent, DISCLAIMER_FOOTER } from "@/components/don-marco-disclaimer";
 
 type Locale = "es" | "en";
 
@@ -212,11 +213,12 @@ function ChatBubble({
   );
 }
 
-export function DonMarcoClient({ locale }: { locale: string }) {
+export function DonMarcoClient({ locale, hasAccepted: initialAccepted }: { locale: string; hasAccepted: boolean }) {
   const lang = (locale === "en" ? "en" : "es") as Locale;
   const t = T[lang];
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [accepted, setAccepted] = useState(initialAccepted);
 
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<ChatEntry[]>([]);
@@ -455,8 +457,16 @@ export function DonMarcoClient({ locale }: { locale: string }) {
             </p>
           </div>
 
+          {/* Disclaimer — shown when not yet accepted */}
+          {!accepted && (
+            <DonMarcoDisclaimerContent
+              locale={locale}
+              onAccepted={() => setAccepted(true)}
+            />
+          )}
+
           {/* Examples shown when no history */}
-          {history.length === 0 && (
+          {accepted && history.length === 0 && (
             <div style={{ flexShrink: 0 }}>
               <div className="eyebrow" style={{ marginBottom: 10 }}>
                 {t.examples}
@@ -489,7 +499,7 @@ export function DonMarcoClient({ locale }: { locale: string }) {
           )}
 
           {/* Chat messages */}
-          {history.length > 0 && (
+          {accepted && history.length > 0 && (
             <div
               style={{
                 flex: 1,
@@ -569,10 +579,10 @@ export function DonMarcoClient({ locale }: { locale: string }) {
                 }}
               />
               <button
-                disabled={busy || !input.trim()}
+                disabled={busy || !input.trim() || !accepted}
                 onClick={() => send(input)}
                 className="btn btn-primary"
-                style={{ opacity: busy || !input.trim() ? 0.4 : 1 }}
+                style={{ opacity: busy || !input.trim() || !accepted ? 0.4 : 1 }}
               >
                 {busy ? t.busy : t.send}
               </button>
@@ -602,6 +612,11 @@ export function DonMarcoClient({ locale }: { locale: string }) {
               <span style={{ flex: 1 }} />
               <span>{t.enterHint}</span>
             </div>
+            {accepted && (
+              <p style={{ margin: "6px 0 0", fontSize: 10, color: "var(--ink-3)", lineHeight: 1.4, fontFamily: "var(--mono)" }}>
+                {DISCLAIMER_FOOTER[lang]}
+              </p>
+            )}
           </div>
         </div>
 

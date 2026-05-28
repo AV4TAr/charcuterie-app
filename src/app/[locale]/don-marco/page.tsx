@@ -19,5 +19,11 @@ export default async function DonMarcoPage({
 
   if (!user) redirect({ href: "/login", locale });
 
-  return <DonMarcoClient locale={locale} />;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("don_marco_accepted_at")
+    .eq("id", user!.id)
+    .single();
+
+  return <DonMarcoClient locale={locale} hasAccepted={!!profile?.don_marco_accepted_at} />;
 }

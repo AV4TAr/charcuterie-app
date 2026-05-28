@@ -501,13 +501,9 @@ export function DonMarcoClient({ locale }: { locale: string }) {
                   <ChatBubble role="user">{h.user}</ChatBubble>
                   <ChatBubble role="assistant">
                     {h.assistantText === "…" ? (
-                      busy && i === history.length - 1 && streamingText ? (
-                        <span style={{ opacity: 0.7 }}>{streamingText.slice(0, 120)}…</span>
-                      ) : (
-                        <span className="mono" style={{ color: "var(--ink-3)" }}>
-                          ● ● ●
-                        </span>
-                      )
+                      <span className="mono" style={{ color: "var(--ink-3)" }}>
+                        ● ● ●
+                      </span>
                     ) : h.needsApiKey ? (
                       <>
                         <span>{h.assistantText}</span>

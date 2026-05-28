@@ -18,6 +18,7 @@ type ChatEntry = {
 
 const EXAMPLES: Record<Locale, string[]> = {
   es: [
+    "Chorizo clásico parrillero uruguayo.",
     "Un chorizo argentino para parrilla, fresco, intenso pero no picante.",
     "Salame seco italiano, 28 días de oreo, vino tinto.",
     "Boudin blanco francés, suave, con huevo y leche.",

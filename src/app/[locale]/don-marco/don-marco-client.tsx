@@ -27,7 +27,7 @@ const EXAMPLES: Record<Locale, string[]> = {
     "Sobrasada mallorquina, untable, mucho pimentón, sin cocción.",
   ],
   en: [
-    "A fresh Argentine grilling chorizo, intense but not spicy.",
+    "A fresh Uruguayan grilling chorizo, intense but not spicy.",
     "Italian dry salami, 28-day cure, red wine.",
     "French boudin blanc, mild, with egg and milk.",
     "Mallorquin sobrasada, spreadable, lots of paprika, uncooked.",

@@ -106,7 +106,7 @@ export function WeightCalculator({
           {calculated.map((row) => {
             const sourceIng = ingredients.find((i) => i.id === row.id);
             if (!sourceIng) return null;
-            const unitOptions = unitOptionsFor(sourceIng.measurementType);
+            const unitOptions = unitOptionsFor(sourceIng);
             return (
               <tr key={row.id} style={{ borderTop: "1px solid var(--rule-soft)" }}>
                 <td className="px-4 py-2">
@@ -173,12 +173,17 @@ export function WeightCalculator({
   );
 }
 
-function unitOptionsFor(type: RecipeIngredient["measurementType"]): Unit[] {
-  switch (type) {
+function unitOptionsFor(ing: RecipeIngredient): Unit[] {
+  const hasDensity = !!(ing.defaultDensityGPerMl && ing.defaultDensityGPerMl > 0);
+  switch (ing.measurementType) {
     case "mass":
-      return ["g", "kg", "oz", "lb"];
+      return hasDensity
+        ? (["g", "kg", "oz", "lb", "ml", "l", "floz", "tsp", "tbsp", "cup"] as Unit[])
+        : ["g", "kg", "oz", "lb"];
     case "volume":
-      return ["ml", "l", "floz", "tsp", "tbsp", "cup"];
+      return hasDensity
+        ? (["ml", "l", "floz", "tsp", "tbsp", "cup", "g", "kg", "oz", "lb"] as Unit[])
+        : ["ml", "l", "floz", "tsp", "tbsp", "cup"];
     case "length":
       return ["cm", "m"];
     case "count":

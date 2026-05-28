@@ -19,7 +19,7 @@ export default async function NewRecipePage({
 
   const { data: ingredients = [] } = await supabase
     .from("ingredients")
-    .select("id, name, measurement_type, default_density_g_per_ml, category")
+    .select("id, name, name_es, name_en, measurement_type, default_density_g_per_ml, category")
     .order("category")
     .order("name");
 

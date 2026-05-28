@@ -41,12 +41,12 @@ export default async function SharePage({
 
   const { data: rows = [] } = await supabase
     .from("recipe_version_ingredients")
-    .select("id, mode, percent_of_meat, amount_canonical, display_unit, sort_order, notes, scale_with_meat, ingredients(id, name, measurement_type, default_density_g_per_ml)")
+    .select("id, mode, percent_of_meat, amount_canonical, display_unit, sort_order, notes, scale_with_meat, ingredients(id, name, name_es, name_en, measurement_type, default_density_g_per_ml)")
     .eq("version_id", version.id)
     .order("sort_order");
 
   const ingredients: RecipeIngredient[] = (rows ?? []).map((row) => {
-    const ing = row.ingredients as unknown as { id: string; name: string; measurement_type: string; default_density_g_per_ml: number | null } | null;
+    const ing = row.ingredients as unknown as { id: string; name: string; name_es: string | null; name_en: string | null; measurement_type: string; default_density_g_per_ml: number | null } | null;
     return {
       id: row.id,
       name: ing?.name ?? "?",

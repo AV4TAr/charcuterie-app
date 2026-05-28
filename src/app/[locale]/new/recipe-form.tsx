@@ -12,10 +12,17 @@ import ReactMarkdown from "react-markdown";
 type DbIngredient = {
   id: string;
   name: string;
+  name_es: string | null;
+  name_en: string | null;
   measurement_type: MeasurementType;
   default_density_g_per_ml: number | null;
   category: string;
 };
+
+function displayName(ing: DbIngredient, locale: string): string {
+  if (locale === "en") return ing.name_en ?? ing.name;
+  return ing.name_es ?? ing.name;
+}
 
 type Row = {
   ingredientId: string;
@@ -61,9 +68,10 @@ function slugify(text: string): string {
 
 function matchIngredient(name: string, catalog: DbIngredient[]): DbIngredient | null {
   const q = name.toLowerCase().trim();
-  const exact = catalog.find((i) => i.name.toLowerCase().trim() === q);
+  const names = (i: DbIngredient) => [i.name, i.name_es, i.name_en].filter(Boolean).map((n) => n!.toLowerCase().trim());
+  const exact = catalog.find((i) => names(i).includes(q));
   if (exact) return exact;
-  const contains = catalog.find((i) => i.name.toLowerCase().includes(q) || q.includes(i.name.toLowerCase()));
+  const contains = catalog.find((i) => names(i).some((n) => n.includes(q) || q.includes(n)));
   return contains ?? null;
 }
 
@@ -82,12 +90,14 @@ function IngredientCombobox({
   catalog,
   onCreateNew,
   placeholder,
+  locale,
 }: {
   value: string;
   onChange: (id: string) => void;
   catalog: DbIngredient[];
   onCreateNew: () => void;
   placeholder: string;
+  locale: string;
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -103,7 +113,10 @@ function IngredientCombobox({
 
   const selected = catalog.find((i) => i.id === value);
   const filtered = query.length > 0
-    ? catalog.filter((i) => i.name.toLowerCase().includes(query.toLowerCase()))
+    ? catalog.filter((i) => {
+        const q = query.toLowerCase();
+        return [i.name, i.name_es, i.name_en].some((n) => n?.toLowerCase().includes(q));
+      })
     : catalog;
 
   return (
@@ -113,7 +126,7 @@ function IngredientCombobox({
         className="input-lab"
         autoComplete="off"
         placeholder={placeholder}
-        value={open ? query : (selected?.name ?? "")}
+        value={open ? query : (selected ? displayName(selected, locale) : "")}
         onFocus={() => { setOpen(true); setQuery(""); }}
         onChange={(e) => setQuery(e.target.value)}
         style={{ width: "100%" }}
@@ -155,7 +168,7 @@ function IngredientCombobox({
                 fontFamily: "inherit",
               }}
             >
-              {ing.name}
+              {displayName(ing, locale)}
             </button>
           ))}
           {filtered.length === 0 && (
@@ -255,9 +268,23 @@ function AIImportPanel({
       let id = p.matchedId;
       if (!id) {
         const measurementType = inferMeasurementType(p.unit);
+        let name_es: string | null = null;
+        let name_en: string | null = null;
+        try {
+          const tRes = await fetch("/api/translate-ingredient", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: p.name }),
+          });
+          if (tRes.ok) {
+            const t = await tRes.json() as { name_es: string; name_en: string };
+            name_es = t.name_es;
+            name_en = t.name_en;
+          }
+        } catch { /* translation is non-blocking */ }
         const { data } = await supabase
           .from("ingredients")
-          .insert({ name: p.name, category: "other", measurement_type: measurementType })
+          .insert({ name: p.name, name_es, name_en, category: "other", measurement_type: measurementType })
           .select("id")
           .single();
         if (data) id = data.id;
@@ -747,6 +774,8 @@ export function RecipeForm({
     const updated: DbIngredient = {
       id: ing.id,
       name: ing.name,
+      name_es: null,
+      name_en: null,
       measurement_type: ing.measurement_type,
       default_density_g_per_ml: ing.default_density_g_per_ml,
       category: ing.category,
@@ -987,6 +1016,7 @@ export function RecipeForm({
                       catalog={catalog}
                       onCreateNew={() => setDialogRowIndex(index)}
                       placeholder={t("selectIngredient")}
+                      locale={locale}
                     />
                   )}
                 />

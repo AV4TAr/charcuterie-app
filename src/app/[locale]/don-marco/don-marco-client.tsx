@@ -464,7 +464,7 @@ export function DonMarcoClient({ locale }: { locale: string }) {
                 {EXAMPLES[lang].map((ex, i) => (
                   <button
                     key={i}
-                    onClick={() => send(ex)}
+                    onClick={() => { setInput(ex); textareaRef.current?.focus(); }}
                     disabled={busy}
                     style={{
                       textAlign: "left",

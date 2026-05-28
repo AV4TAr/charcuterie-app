@@ -22,6 +22,7 @@ Chorizo Lab es una herramienta de nicho para hobbistas. La propuesta de valor es
 | Análisis de receta | **10 en total** (pool vitalicio) |
 | Importar con IA | del mismo pool de 10 |
 | Don Marco chat (/don-marco) | del mismo pool de 10 |
+| Follow-ups por sesión de análisis | 8 mensajes por apertura del drawer |
 | BYOK (clave propia de Anthropic) | sin ningún límite |
 
 > El pool de 10 es vitalicio — se agota una vez, no se renueva. Suficiente para tener 2-3 sesiones reales y sentir el valor; no tanto como para usarlo indefinidamente gratis.
@@ -38,6 +39,7 @@ Todo lo de Free, más:
 | Importar con IA | ilimitado |
 | Don Marco chat (/don-marco) | 20 mensajes / día |
 | Follow-ups por sesión de análisis | 8 mensajes por apertura del drawer |
+| Don Marco chat (/don-marco) | 20 mensajes / día |
 | BYOK | sin ningún límite (bypasea todos los caps) |
 | Badge "Pro" en perfil | ✓ |
 | Exportar receta a PDF | ✓ (futuro) |
@@ -150,7 +152,7 @@ create table public.ai_usage (
 
 ### Lógica de caps por sesión de análisis
 
-Los follow-ups del drawer se cuentan en el **cliente** (estado local del componente `DonMarcoDrawer`). El servidor no necesita saber cuántos follow-ups hubo — el cap es UX, no seguridad. Si alguien lo bypasea técnicamente, está pagando $5/mes de todos modos.
+Los follow-ups del drawer se cuentan en el **cliente** (estado local del componente `DonMarcoDrawer`). El cap de 8 aplica a todos los tiers (Free y Pro) — es un límite de UX, no de seguridad. El servidor no necesita validarlo. Con BYOK el cap no aparece.
 
 ### RLS
 - `subscriptions`: SELECT propio, UPDATE/INSERT solo via service role (webhook).
@@ -231,7 +233,7 @@ Se llaman server-side en API routes y server actions, nunca en el cliente.
 | Qué cuenta en el trial | Análisis + imports + mensajes en chat (no follow-ups) | Los follow-ups son parte del análisis, no usos separados |
 | Trial mensual vs vitalicio | Vitalicio (10 usos totales) | Crea urgencia real; mensual reduce la presión de upgrade |
 | Recetas públicas cuentan | No | Incentiva compartir, genera tráfico |
-| Cap de follow-ups en Pro | Cliente (UX, no seguridad) | Evita complejidad server-side; usuario Pro ya paga |
+| Cap de follow-ups (todos los tiers) | 8 por sesión, cliente (UX) | Evita complejidad server-side; con BYOK no aplica |
 | Cap diario chat en Pro | Server-side | Protege tokens reales; se resetea cada día |
 | BYOK | Sin ningún límite | Son power users, no los penalizamos |
 | Precio | $5/mes · $48/año | Punto dulce hobbista; margen ~95% sobre costo IA |

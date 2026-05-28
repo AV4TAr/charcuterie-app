@@ -19,6 +19,7 @@ interface WeightCalculatorProps {
   initialMeatAmount?: number;
   initialMeatUnit?: MassUnit;
   locale?: "es" | "en";
+  meatBaseGrams?: number;
 }
 
 export function WeightCalculator({
@@ -26,6 +27,7 @@ export function WeightCalculator({
   initialMeatAmount = 1,
   initialMeatUnit = "kg",
   locale = "es",
+  meatBaseGrams,
 }: WeightCalculatorProps) {
   const t = useTranslations("calculator");
   const [meatAmount, setMeatAmount] = useState(initialMeatAmount);
@@ -42,11 +44,12 @@ export function WeightCalculator({
   );
 
   const calculated = useMemo(
-    () => calculateIngredients(meatAmount, meatUnit, ingredientsWithChosenUnit),
-    [meatAmount, meatUnit, ingredientsWithChosenUnit],
+    () => calculateIngredients(meatAmount, meatUnit, ingredientsWithChosenUnit, meatBaseGrams),
+    [meatAmount, meatUnit, ingredientsWithChosenUnit, meatBaseGrams],
   );
 
   const totalGrams = calculated.reduce((s, c) => s + (c.amountGrams ?? 0), 0);
+  const hasFixed = calculated.some((c) => c.mode === "absolute" && !c.scaleWithMeat);
 
   return (
     <div className="card p-0 overflow-hidden">
@@ -107,7 +110,12 @@ export function WeightCalculator({
             return (
               <tr key={row.id} style={{ borderTop: "1px solid var(--rule-soft)" }}>
                 <td className="px-4 py-2">
-                  <div style={{ fontWeight: 500, color: "var(--ink)", fontSize: 13 }}>{row.name}</div>
+                  <div style={{ fontWeight: 500, color: "var(--ink)", fontSize: 13 }}>
+                    {row.name}
+                    {row.mode === "absolute" && !row.scaleWithMeat && (
+                      <span className="mono" style={{ fontSize: 9, color: "var(--ink-3)", marginLeft: 4 }}>*</span>
+                    )}
+                  </div>
                   <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>
                     {row.mode === "percent"
                       ? `${Number((row.percentOfMeat ?? 0).toFixed(2))}% ${t("percentMode").toLowerCase()}`
@@ -150,6 +158,15 @@ export function WeightCalculator({
             </td>
             <td />
           </tr>
+          {hasFixed && (
+            <tr>
+              <td colSpan={3} className="px-4 py-2 mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>
+                {locale === "es"
+                  ? "* cantidad fija — no varía con el peso de carne"
+                  : "* fixed amount — does not scale with meat weight"}
+              </td>
+            </tr>
+          )}
         </tfoot>
       </table>
     </div>

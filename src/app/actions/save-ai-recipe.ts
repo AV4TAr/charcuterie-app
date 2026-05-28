@@ -137,6 +137,7 @@ export async function saveAIRecipe(aiRecipe: AIRecipe): Promise<{ recipeId: stri
         amount_canonical: null,
         display_unit: displayUnit,
         sort_order: idx,
+        scale_with_meat: true,
       };
     }
     return {
@@ -147,6 +148,7 @@ export async function saveAIRecipe(aiRecipe: AIRecipe): Promise<{ recipeId: stri
       amount_canonical: aiIng.amount_canonical ?? 0,
       display_unit: displayUnit,
       sort_order: idx,
+      scale_with_meat: true,
     };
   });
 

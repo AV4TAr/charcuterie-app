@@ -42,7 +42,7 @@ export default async function RecipeDetailPage({
 
   const { data: rows = [] } = await supabase
     .from("recipe_version_ingredients")
-    .select("id, mode, percent_of_meat, amount_canonical, display_unit, sort_order, notes, ingredients(id, name, measurement_type, default_density_g_per_ml)")
+    .select("id, mode, percent_of_meat, amount_canonical, display_unit, sort_order, notes, scale_with_meat, ingredients(id, name, measurement_type, default_density_g_per_ml)")
     .eq("version_id", version.id)
     .order("sort_order");
 
@@ -59,6 +59,7 @@ export default async function RecipeDetailPage({
       displayUnit: row.display_unit as Unit,
       notes: row.notes ?? null,
       sortOrder: row.sort_order,
+      scaleWithMeat: row.scale_with_meat ?? true,
     };
   });
 
@@ -210,6 +211,7 @@ export default async function RecipeDetailPage({
           initialMeatAmount={initialMeatAmount}
           initialMeatUnit={meatUnit}
           locale={locale}
+          meatBaseGrams={Number(version.meat_base_weight_grams)}
         />
       ) : (
         <p style={{ fontSize: 13, color: "var(--ink-3)" }}>{t("noIngredients")}</p>

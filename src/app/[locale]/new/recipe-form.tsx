@@ -21,6 +21,7 @@ type Row = {
   mode: "percent" | "absolute";
   value: string;
   displayUnit: string;
+  scaleWithMeat: boolean;
 };
 
 export type RecipeFormValues = {
@@ -118,6 +119,7 @@ export function RecipeForm({
       mode: "percent",
       value: "1",
       displayUnit: defaultUnit,
+      scaleWithMeat: true,
     });
   }
 
@@ -199,6 +201,7 @@ export function RecipeForm({
           ingredient_id: r.ingredientId,
           display_unit: r.displayUnit,
           sort_order: i,
+          scale_with_meat: r.scaleWithMeat,
         };
         if (r.mode === "percent") {
           return { ...common, mode: "percent" as const, percent_of_meat: val / 100, amount_canonical: null };
@@ -377,6 +380,24 @@ export function RecipeForm({
                   )}
                 </select>
               </div>
+
+              {mode === "absolute" && (
+                <Controller
+                  control={control}
+                  name={`rows.${index}.scaleWithMeat`}
+                  render={({ field: f }) => (
+                    <button
+                      type="button"
+                      title={f.value ? "Escala con la carne (click para fijar)" : "Cantidad fija (click para escalar)"}
+                      onClick={() => f.onChange(!f.value)}
+                      className="btn btn-ghost btn-sm"
+                      style={{ fontSize: 14, padding: "0 8px", color: f.value ? "var(--ink-3)" : "var(--accent)" }}
+                    >
+                      {f.value ? "🔓" : "🔒"}
+                    </button>
+                  )}
+                />
+              )}
 
               <button
                 type="button"

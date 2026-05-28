@@ -37,7 +37,7 @@ export default async function EditRecipePage({
 
   const { data: rows = [] } = await supabase
     .from("recipe_version_ingredients")
-    .select("ingredient_id, mode, percent_of_meat, amount_canonical, display_unit, sort_order")
+    .select("ingredient_id, mode, percent_of_meat, amount_canonical, display_unit, sort_order, scale_with_meat")
     .eq("version_id", version.id)
     .order("sort_order");
 
@@ -79,6 +79,7 @@ export default async function EditRecipePage({
         mode: r.mode as "percent" | "absolute",
         value,
         displayUnit,
+        scaleWithMeat: r.scale_with_meat ?? true,
       };
     }),
   };

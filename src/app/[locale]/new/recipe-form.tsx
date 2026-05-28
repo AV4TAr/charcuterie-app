@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/i18n/routing";
@@ -40,6 +40,14 @@ export type EditingContext = {
   currentVersionNumber: number;
 };
 
+type ParsedIngredient = {
+  name: string;
+  amount: number;
+  unit: string;
+  matchedId: string | null;
+  matchedName: string | null;
+};
+
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -49,6 +57,318 @@ function slugify(text: string): string {
     .replace(/^-|-$/g, "")
     .slice(0, 80);
 }
+
+function matchIngredient(name: string, catalog: DbIngredient[]): DbIngredient | null {
+  const q = name.toLowerCase().trim();
+  const exact = catalog.find((i) => i.name.toLowerCase().trim() === q);
+  if (exact) return exact;
+  const contains = catalog.find((i) => i.name.toLowerCase().includes(q) || q.includes(i.name.toLowerCase()));
+  return contains ?? null;
+}
+
+// ─── Ingredient combobox ────────────────────────────────────────────────────
+
+function IngredientCombobox({
+  value,
+  onChange,
+  catalog,
+  onCreateNew,
+  placeholder,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+  catalog: DbIngredient[];
+  onCreateNew: () => void;
+  placeholder: string;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = catalog.find((i) => i.id === value);
+  const filtered = query.length > 0
+    ? catalog.filter((i) => i.name.toLowerCase().includes(query.toLowerCase()))
+    : catalog;
+
+  return (
+    <div ref={containerRef} style={{ position: "relative", flex: 1, minWidth: 0 }}>
+      <input
+        type="text"
+        className="input-lab"
+        autoComplete="off"
+        placeholder={placeholder}
+        value={open ? query : (selected?.name ?? "")}
+        onFocus={() => { setOpen(true); setQuery(""); }}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ width: "100%" }}
+      />
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 2px)",
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          background: "var(--paper)",
+          border: "1px solid var(--rule)",
+          borderRadius: 6,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+          maxHeight: 220,
+          overflowY: "auto",
+        }}>
+          {filtered.map((ing) => (
+            <button
+              key={ing.id}
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onChange(ing.id);
+                setOpen(false);
+                setQuery("");
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                textAlign: "left",
+                padding: "8px 12px",
+                fontSize: 13,
+                color: "var(--ink)",
+                background: ing.id === value ? "var(--bg-2)" : "transparent",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {ing.name}
+            </button>
+          ))}
+          {filtered.length === 0 && (
+            <div style={{ padding: "8px 12px", fontSize: 12, color: "var(--ink-3)", fontFamily: "var(--mono)" }}>
+              Sin resultados
+            </div>
+          )}
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setOpen(false);
+              onCreateNew();
+            }}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              padding: "8px 12px",
+              fontSize: 12,
+              color: "var(--accent)",
+              background: "var(--bg-2)",
+              border: "none",
+              borderTop: "1px solid var(--rule)",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            + {query ? `Crear "${query}"` : "Nuevo ingrediente"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── AI import panel ────────────────────────────────────────────────────────
+
+function AIImportPanel({
+  catalog,
+  onAdd,
+  onClose,
+  locale,
+}: {
+  catalog: DbIngredient[];
+  onAdd: (rows: Row[]) => void;
+  onClose: () => void;
+  locale: string;
+}) {
+  const [text, setText] = useState("");
+  const [parsing, setParsing] = useState(false);
+  const [preview, setPreview] = useState<ParsedIngredient[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const isEs = locale !== "en";
+
+  async function handleParse() {
+    if (!text.trim()) return;
+    setParsing(true);
+    setError(null);
+    setPreview(null);
+    try {
+      const res = await fetch("/api/parse-ingredients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (res.status === 402) {
+        setError(isEs ? "Necesitás configurar tu clave de Anthropic en Ajustes." : "Add your Anthropic API key in Settings.");
+        return;
+      }
+      if (!res.ok) {
+        setError(isEs ? "Error al interpretar. Intentá de nuevo." : "Parse error. Try again.");
+        return;
+      }
+      const parsed = await res.json() as { name: string; amount: number; unit: string }[];
+      const mapped: ParsedIngredient[] = parsed.map((p) => {
+        const match = matchIngredient(p.name, catalog);
+        return { ...p, matchedId: match?.id ?? null, matchedName: match?.name ?? null };
+      });
+      setPreview(mapped);
+    } catch {
+      setError(isEs ? "Error de red. Intentá de nuevo." : "Network error. Try again.");
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  function handleAdd() {
+    if (!preview) return;
+    const newRows: Row[] = preview
+      .filter((p) => p.matchedId)
+      .map((p) => ({
+        ingredientId: p.matchedId!,
+        mode: "absolute" as const,
+        value: String(p.amount),
+        displayUnit: p.unit,
+        scaleWithMeat: true,
+      }));
+    onAdd(newRows);
+    onClose();
+  }
+
+  const matchedCount = preview?.filter((p) => p.matchedId).length ?? 0;
+  const unmatchedCount = preview?.filter((p) => !p.matchedId).length ?? 0;
+
+  return (
+    <div style={{
+      border: "1px solid var(--rule)",
+      borderRadius: 8,
+      background: "var(--bg-2)",
+      padding: 16,
+      marginBottom: 8,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span className="tag tag-accent" style={{ fontSize: 9 }}>✦ IA</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+          {isEs ? "Importar ingredientes con IA" : "Import ingredients with AI"}
+        </span>
+        <button type="button" onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--ink-3)", cursor: "pointer", fontSize: 16 }}>×</button>
+      </div>
+
+      {!preview ? (
+        <>
+          <p style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 8, lineHeight: 1.5 }}>
+            {isEs
+              ? "Pegá tu lista de ingredientes (uno por línea). Don Marco interpreta cantidades y unidades."
+              : "Paste your ingredient list (one per line). Don Marco interprets amounts and units."}
+          </p>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={isEs
+              ? "Ej:\n2 cdas sal fina\n1.5 cdas pimentón dulce\n0.5 cdas ajo en polvo\n5 m tripa natural"
+              : "e.g.:\n2 tbsp fine salt\n1.5 tbsp sweet paprika\n0.5 tbsp garlic powder\n5 m natural casing"}
+            rows={6}
+            className="textarea-lab"
+            style={{ marginBottom: 10, fontFamily: "var(--mono)", fontSize: 12 }}
+          />
+          {error && <p style={{ fontSize: 12, color: "var(--warn)", marginBottom: 8 }}>{error}</p>}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              onClick={handleParse}
+              disabled={parsing || !text.trim()}
+              className="btn btn-sm btn-primary"
+            >
+              {parsing ? (isEs ? "Interpretando…" : "Parsing…") : (isEs ? "Interpretar" : "Parse")}
+            </button>
+            <button type="button" onClick={onClose} className="btn btn-sm btn-ghost">
+              {isEs ? "Cancelar" : "Cancel"}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", marginBottom: 10 }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--rule)" }}>
+                <th style={{ textAlign: "left", padding: "4px 8px", color: "var(--ink-3)", fontWeight: 500 }}>
+                  {isEs ? "Ingrediente" : "Ingredient"}
+                </th>
+                <th style={{ textAlign: "right", padding: "4px 8px", color: "var(--ink-3)", fontWeight: 500 }}>
+                  {isEs ? "Cantidad" : "Amount"}
+                </th>
+                <th style={{ textAlign: "left", padding: "4px 8px", color: "var(--ink-3)", fontWeight: 500 }}>
+                  {isEs ? "Unidad" : "Unit"}
+                </th>
+                <th style={{ textAlign: "left", padding: "4px 8px", color: "var(--ink-3)", fontWeight: 500 }}>
+                  {isEs ? "Match" : "Match"}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {preview.map((p, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid var(--rule-soft)" }}>
+                  <td style={{ padding: "5px 8px", color: "var(--ink)" }}>{p.name}</td>
+                  <td style={{ padding: "5px 8px", textAlign: "right", fontFamily: "var(--mono)", color: "var(--ink)" }}>{p.amount}</td>
+                  <td style={{ padding: "5px 8px", fontFamily: "var(--mono)", color: "var(--ink)" }}>{p.unit}</td>
+                  <td style={{ padding: "5px 8px" }}>
+                    {p.matchedId ? (
+                      <span style={{ color: "var(--good)", fontFamily: "var(--mono)", fontSize: 11 }}>✓ {p.matchedName}</span>
+                    ) : (
+                      <span style={{ color: "var(--warn)", fontFamily: "var(--mono)", fontSize: 11 }}>
+                        {isEs ? "✗ no encontrado" : "✗ not found"}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {unmatchedCount > 0 && (
+            <p style={{ fontSize: 11, color: "var(--ink-3)", marginBottom: 8, fontFamily: "var(--mono)" }}>
+              {isEs
+                ? `${unmatchedCount} ingrediente${unmatchedCount > 1 ? "s" : ""} no encontrado${unmatchedCount > 1 ? "s" : ""} en el catálogo — no se van a agregar.`
+                : `${unmatchedCount} ingredient${unmatchedCount > 1 ? "s" : ""} not found in catalog — will be skipped.`}
+            </p>
+          )}
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={matchedCount === 0}
+              className="btn btn-sm btn-primary"
+            >
+              {isEs ? `Agregar ${matchedCount} ingrediente${matchedCount !== 1 ? "s" : ""}` : `Add ${matchedCount} ingredient${matchedCount !== 1 ? "s" : ""}`}
+            </button>
+            <button type="button" onClick={() => setPreview(null)} className="btn btn-sm btn-ghost">
+              {isEs ? "← Editar texto" : "← Edit text"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Main form ──────────────────────────────────────────────────────────────
 
 const EMPTY_DEFAULTS: RecipeFormValues = {
   title: "",
@@ -80,6 +400,7 @@ export function RecipeForm({
   const [saveError, setSaveError] = useState("");
   const [catalog, setCatalog] = useState<DbIngredient[]>(ingredients);
   const [dialogRowIndex, setDialogRowIndex] = useState<number | null>(null);
+  const [showImport, setShowImport] = useState(false);
   const isEditing = !!editing;
 
   const firstIng = catalog[0];
@@ -121,6 +442,10 @@ export function RecipeForm({
       displayUnit: defaultUnit,
       scaleWithMeat: true,
     });
+  }
+
+  function handleImportAdd(newRows: Row[]) {
+    newRows.forEach((r) => append(r));
   }
 
   async function onSubmit(values: RecipeFormValues) {
@@ -272,7 +597,27 @@ export function RecipeForm({
       </div>
 
       <div className="space-y-3">
-        <label className="label-lab">{t("ingredients")}</label>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="label-lab" style={{ margin: 0 }}>{t("ingredients")}</span>
+          <button
+            type="button"
+            onClick={() => setShowImport((v) => !v)}
+            className="btn btn-sm btn-ghost"
+            style={{ fontSize: 11, color: "var(--accent)", marginLeft: "auto" }}
+          >
+            ✦ {locale === "en" ? "Import with AI" : "Importar con IA"}
+          </button>
+        </div>
+
+        {showImport && (
+          <AIImportPanel
+            catalog={catalog}
+            onAdd={handleImportAdd}
+            onClose={() => setShowImport(false)}
+            locale={locale}
+          />
+        )}
+
         {fields.map((field, index) => {
           const row = rows[index];
           const ing = row ? getIngredient(row.ingredientId) : null;
@@ -286,38 +631,25 @@ export function RecipeForm({
             >
               <div className="flex-1 min-w-[160px]">
                 <span className="label-lab">{t("selectIngredient")}</span>
-                <div className="flex gap-1">
-                  <Controller
-                    control={control}
-                    name={`rows.${index}.ingredientId`}
-                    render={({ field: f }) => (
-                      <select
-                        {...f}
-                        className="select-lab"
-                        style={{ flex: 1, minWidth: 0 }}
-                        onChange={(e) => {
-                          f.onChange(e);
-                          const ing2 = getIngredient(e.target.value);
-                          const currentMode = rows[index]?.mode ?? "percent";
-                          if (ing2 && currentMode === "percent") {
-                            setValue(`rows.${index}.displayUnit`, unitsForType(ing2.measurement_type)[0]);
-                          }
-                        }}
-                      >
-                        {catalog.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
-                      </select>
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setDialogRowIndex(index)}
-                    className="btn btn-sm btn-ghost"
-                    title={t("newIngredient")}
-                    style={{ padding: "0 10px", color: "var(--accent)", flexShrink: 0 }}
-                  >
-                    +
-                  </button>
-                </div>
+                <Controller
+                  control={control}
+                  name={`rows.${index}.ingredientId`}
+                  render={({ field: f }) => (
+                    <IngredientCombobox
+                      value={f.value}
+                      onChange={(id) => {
+                        f.onChange(id);
+                        const ing2 = getIngredient(id);
+                        if (ing2 && rows[index]?.mode === "percent") {
+                          setValue(`rows.${index}.displayUnit`, unitsForType(ing2.measurement_type)[0]);
+                        }
+                      }}
+                      catalog={catalog}
+                      onCreateNew={() => setDialogRowIndex(index)}
+                      placeholder={t("selectIngredient")}
+                    />
+                  )}
+                />
               </div>
 
               <div>

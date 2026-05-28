@@ -5,7 +5,5 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   await supabase.auth.signOut();
 
-  const referer = request.headers.get("referer");
-  const target = referer ?? new URL("/", request.url).toString();
-  return NextResponse.redirect(target, { status: 303 });
+  return NextResponse.redirect(new URL("/", request.url), { status: 303 });
 }

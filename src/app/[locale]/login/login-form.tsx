@@ -22,7 +22,7 @@ export function LoginForm({ locale }: { locale: string }) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${origin}/auth/callback?next=/${locale}`,
+        emailRedirectTo: `${origin}/auth/callback?next=/${locale}/library`,
       },
     });
 

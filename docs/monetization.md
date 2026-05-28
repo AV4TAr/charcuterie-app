@@ -35,8 +35,8 @@ Todo lo de Free, más:
 | Feature | Límite en Plus |
 |---------|--------------|
 | Recetas privadas | ilimitadas |
-| Análisis de receta | ilimitados |
-| Importar con IA | ilimitado |
+| Análisis de receta | **2 por versión de receta** |
+| Importar con IA | **2 por versión de receta** |
 | Don Marco chat (/don-marco) | 20 mensajes / día |
 | Follow-ups por sesión de análisis | 8 mensajes por apertura del drawer |
 | BYOK | sin ningún límite (bypasea todos los caps) |
@@ -44,7 +44,7 @@ Todo lo de Free, más:
 | Exportar receta a PDF | ✓ (futuro) |
 | Acceso anticipado a features | ✓ |
 
-> **Topes en Plus**: los caps de Plus (8 follow-ups por análisis, 20 msg/día en chat) protegen los tokens del sistema. El análisis de receta es una herramienta de trabajo, no un chatbot de uso general. Si alguien quiere charlar sin límite, trae su propia key. Con BYOK, desaparecen todos los caps.
+> **Topes en Plus**: análisis e imports están acotados a 2 usos por versión de receta — suficiente para iterar, no para abusar. Cada nueva versión que guardás resetea el contador. El chat general tiene cap diario. Con BYOK desaparecen todos los caps.
 
 > **Sobre el precio**: $5/mes es el punto dulce para hobbistas — menos que un café. $10/mes solo por IA es demasiado para este segmento; bundlear todo en $5 es más fácil de justificar.
 
@@ -137,15 +137,25 @@ create table public.subscriptions (
   updated_at           timestamptz not null default now()
 );
 
--- Contador de uso de IA
--- Para Free: pool vitalicio (nunca se resetea)
--- Para Plus: contador diario de mensajes en el chat (se resetea cada día)
+-- Uso global de IA por usuario
+-- Free: pool vitalicio de 10 (trial_used, nunca se resetea)
+-- Plus: cap diario del chat general (se resetea cada día)
 create table public.ai_usage (
-  user_id          uuid primary key references auth.users(id) on delete cascade,
-  trial_used       int  not null default 0,   -- pool vitalicio (Free)
-  chat_today       int  not null default 0,   -- mensajes hoy en /don-marco (Plus)
-  chat_date        date not null default current_date,
-  updated_at       timestamptz not null default now()
+  user_id      uuid primary key references auth.users(id) on delete cascade,
+  trial_used   int  not null default 0,
+  chat_today   int  not null default 0,
+  chat_date    date not null default current_date,
+  updated_at   timestamptz not null default now()
+);
+
+-- Uso de IA por versión de receta (Plus)
+-- Resetea naturalmente cuando el usuario guarda una nueva versión
+create table public.ai_usage_per_version (
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  version_id  uuid not null references recipe_versions(id) on delete cascade,
+  analyses    int  not null default 0,  -- max 2
+  imports     int  not null default 0,  -- max 2
+  primary key (user_id, version_id)
 );
 ```
 

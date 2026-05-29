@@ -47,6 +47,13 @@
 - Private recipes visible to owner only (enforced via RLS)
 - Toggle inline from `/library` (no new version) — click the visibility badge on a card, confirm in popover
 
+### Archive
+- Owner can archive a recipe from the library card → hidden from all listings (library tabs, explore, share links return 404)
+- Archived recipes appear in a separate "Archivadas" tab in `/library` with a Restore button
+- While archived: read-only banner on `/r/[id]` for the owner; non-owners get 404; `/r/[id]/edit` redirects to view; share links return 404
+- Forks made by other users are unaffected — archive does not cascade
+- Restore brings the recipe back as private (visibility was forced to private on archive); existing share tokens become valid again
+
 ### Share links
 - Public recipes: "Compartir" copies the canonical `/r/[id]` URL to clipboard
 - Private recipes: generates a secret token (`/share/[token]`) — anyone with the link can view + use the calculator without logging in
@@ -87,8 +94,14 @@ All values stored in canonical base units (g, ml, cm, count) and displayed in th
 - "Publicar comentario" button
 
 ## Explore
-- Search public recipes by title or ingredient
+- Public recipes only (private and archived are excluded)
+- Search by title or ingredient
 - Filter by rating, favorites
+
+## Navigation
+- Sticky top nav with logo, main links, theme + locale switchers, and auth controls
+- On screens < md (768px): nav links collapse into a hamburger drawer (Explore, Library, Don Marco, Settings, Sign out)
+- Email + Settings/Sign-out buttons hide responsively to make room on narrower screens
 
 ## User profiles
 - Profile page at `/@username` with public recipes

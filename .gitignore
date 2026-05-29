@@ -51,3 +51,6 @@ next-env.d.ts
 # Local env
 .env.local
 .env*.local
+
+# Generated SQL bundles (run scripts/concat-migrations.sh to regenerate)
+scripts/all-migrations.sql

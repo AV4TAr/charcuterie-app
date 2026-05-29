@@ -1,9 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { Logo } from "@/components/brand/logo";
 import { LocaleSwitcher } from "./locale-switcher";
 import { ThemeToggle } from "./theme-toggle";
+import { MobileMenu } from "./mobile-menu";
 
 export async function SiteNav() {
   const t = await getTranslations("nav");
@@ -13,6 +15,31 @@ export async function SiteNav() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  let isAdmin = false;
+  if (user) {
+    const service = createServiceClient();
+    const { data: profile } = await service
+      .from("profiles")
+      .select("is_superadmin")
+      .eq("id", user.id)
+      .maybeSingle();
+    isAdmin = !!profile?.is_superadmin;
+  }
+
+  const mobileItems = user
+    ? [
+        { href: "/explore", label: t("explore") },
+        { href: "/library", label: t("library") },
+        { href: "/don-marco", label: t("donMarco"), badge: "✦ IA" },
+        { href: "/settings", label: t("settings") },
+        ...(isAdmin ? [{ href: "/admin", label: "Admin", badge: "★" }] : []),
+      ]
+    : [
+        { href: "/explore", label: t("explore") },
+        { href: "/new", label: t("newRecipe") },
+        { href: "/login", label: t("login") },
+      ];
 
   return (
     <header style={{ borderBottom: "1px solid var(--rule)", background: "var(--paper)" }} className="sticky top-0 z-10">
@@ -39,31 +66,44 @@ export async function SiteNav() {
               {t("newRecipe")}
             </Link>
           )}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="hover:opacity-80 transition"
+              style={{ color: "var(--accent)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
+            >
+              Admin
+              <span className="tag tag-accent" style={{ fontSize: 8, padding: "1px 5px" }}>★</span>
+            </Link>
+          )}
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
           <LocaleSwitcher />
-          {user ? (
-            <form action="/auth/logout" method="post" className="flex items-center gap-2">
-              <span
-                className="hidden sm:inline mono"
-                style={{ fontSize: 10, color: "var(--ink-3)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                title={user.email ?? ""}
-              >
-                {user.email}
-              </span>
-              <Link href="/settings" className="btn btn-sm btn-ghost">
-                {t("settings")}
+          <div className="hidden md:flex items-center gap-2">
+            {user ? (
+              <form action="/auth/logout" method="post" className="flex items-center gap-2">
+                <span
+                  className="hidden lg:inline mono"
+                  style={{ fontSize: 10, color: "var(--ink-3)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  title={user.email ?? ""}
+                >
+                  {user.email}
+                </span>
+                <Link href="/settings" className="btn btn-sm btn-ghost">
+                  {t("settings")}
+                </Link>
+                <button type="submit" className="btn btn-sm btn-ghost">
+                  {tAuth("signOut")}
+                </button>
+              </form>
+            ) : (
+              <Link href="/login" className="btn btn-sm">
+                {t("login")}
               </Link>
-              <button type="submit" className="btn btn-sm btn-ghost">
-                {tAuth("signOut")}
-              </button>
-            </form>
-          ) : (
-            <Link href="/login" className="btn btn-sm">
-              {t("login")}
-            </Link>
-          )}
+            )}
+          </div>
+          <MobileMenu items={mobileItems} signOutLabel={tAuth("signOut")} isLoggedIn={!!user} />
         </div>
       </div>
     </header>

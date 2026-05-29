@@ -216,7 +216,7 @@ function RecipeCard({
   }
 
   return (
-    <div className="card p-0 overflow-hidden flex flex-col">
+    <div className="card p-0 flex flex-col">
       <Link
         href={`/r/${r.id}`}
         style={{ textDecoration: "none", display: "block", padding: 16, flex: 1 }}
@@ -429,7 +429,7 @@ function ArchivedCard({
   }
 
   return (
-    <div className="card p-0 overflow-hidden flex flex-col" style={{ opacity: 0.75 }}>
+    <div className="card p-0 flex flex-col" style={{ opacity: 0.75 }}>
       <Link
         href={`/r/${r.id}`}
         style={{ textDecoration: "none", display: "block", padding: 16, flex: 1 }}

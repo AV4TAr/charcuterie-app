@@ -47,6 +47,13 @@
 - Private recipes visible to owner only (enforced via RLS)
 - Toggle inline from `/library` (no new version) — click the visibility badge on a card, confirm in popover
 
+### Archive
+- Owner can archive a recipe from the library card → hidden from all listings (library tabs, explore, share links return 404)
+- Archived recipes appear in a separate "Archivadas" tab in `/library` with a Restore button
+- While archived: read-only banner on `/r/[id]` for the owner; non-owners get 404; `/r/[id]/edit` redirects to view; share links return 404
+- Forks made by other users are unaffected — archive does not cascade
+- Restore brings the recipe back as private (visibility was forced to private on archive); existing share tokens become valid again
+
 ### Share links
 - Public recipes: "Compartir" copies the canonical `/r/[id]` URL to clipboard
 - Private recipes: generates a secret token (`/share/[token]`) — anyone with the link can view + use the calculator without logging in
@@ -87,8 +94,14 @@ All values stored in canonical base units (g, ml, cm, count) and displayed in th
 - "Publicar comentario" button
 
 ## Explore
-- Search public recipes by title or ingredient
+- Public recipes only (private and archived are excluded)
+- Search by title or ingredient
 - Filter by rating, favorites
+
+## Navigation
+- Sticky top nav with logo, main links, theme + locale switchers, and auth controls
+- On screens < md (768px): nav links collapse into a hamburger drawer (Explore, Library, Don Marco, Settings, Sign out)
+- Email + Settings/Sign-out buttons hide responsively to make room on narrower screens
 
 ## User profiles
 - Profile page at `/@username` with public recipes
@@ -153,3 +166,26 @@ Don Marco is the app's AI persona: a master charcutier with 35 years of experien
 - Never returned to the browser; decrypted server-side per request
 - Dev environments can use `ANTHROPIC_API_KEY` env var as fallback
 - Settings page shows connected/disconnected status without revealing the key
+
+## Admin panel (`/admin`)
+Gated by `profiles.is_superadmin`. Superadmins are created exclusively via SQL in the Supabase Dashboard — no app code path can elevate privileges. See `docs/administracion.md` for the full security model.
+
+### Sub-routes
+- **`/admin`** — global dashboard: users, recipes by visibility (public/private/archived), favorites, comments, forks, open proposals, users with API key, users with override, superadmins, signups last 7 days
+- **`/admin/users`** — paginated list (50/page) with search by username or display name. Shows email (resolved from `auth.admin.listUsers`) + override flag + admin flag
+- **`/admin/users/[id]`** — full detail: account info, activity stats, per-user override form (plan / trial / analyses / imports / chat-daily limits + internal note), per-user audit log (last 20)
+- **`/admin/audit`** — global audit log paginated with action filter, usernames resolved inline
+
+### Plan overrides (`user_plan_overrides`)
+- Per-user customization of plan + caps (early adopters, testers, comps)
+- Set/clear from `/admin/users/[id]`; mutations go through `upsertPlanOverride` / `clearPlanOverride` server actions
+- Every mutation is appended to `admin_audit_log` before commit
+- The actual integration with subscription/usage tables comes with monetization phase 1
+
+### Security in layers (per `docs/administracion.md`)
+1. Auth check at the admin layout (server component)
+2. Layout returns `notFound()` (404, not 403) if the user is not a superadmin — hides the panel's existence
+3. Every server action re-calls `assertAdmin()` (no trust in the layout)
+4. All admin ops use the service role; the service role key never leaves the server
+5. Mutations write to the append-only audit log first
+6. Nav shows the Admin link only when `profiles.is_superadmin = true` (resolved server-side per request)

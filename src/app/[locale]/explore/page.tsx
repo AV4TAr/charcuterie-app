@@ -21,6 +21,7 @@ export default async function ExplorePage({
     .select(
       "id, title, description, visibility, favorites_count, ratings_avg, created_at, profiles!owner_id(username, display_name)",
     )
+    .eq("visibility", "public")
     .order("created_at", { ascending: false })
     .limit(50);
 

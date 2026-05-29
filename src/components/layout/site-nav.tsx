@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { Logo } from "@/components/brand/logo";
 import { LocaleSwitcher } from "./locale-switcher";
 import { ThemeToggle } from "./theme-toggle";
@@ -15,12 +16,24 @@ export async function SiteNav() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let isAdmin = false;
+  if (user) {
+    const service = createServiceClient();
+    const { data: profile } = await service
+      .from("profiles")
+      .select("is_superadmin")
+      .eq("id", user.id)
+      .maybeSingle();
+    isAdmin = !!profile?.is_superadmin;
+  }
+
   const mobileItems = user
     ? [
         { href: "/explore", label: t("explore") },
         { href: "/library", label: t("library") },
         { href: "/don-marco", label: t("donMarco"), badge: "✦ IA" },
         { href: "/settings", label: t("settings") },
+        ...(isAdmin ? [{ href: "/admin", label: "Admin", badge: "★" }] : []),
       ]
     : [
         { href: "/explore", label: t("explore") },
@@ -51,6 +64,16 @@ export async function SiteNav() {
           ) : (
             <Link href="/new" className="hover:opacity-80 transition" style={{ color: "inherit", textDecoration: "none" }}>
               {t("newRecipe")}
+            </Link>
+          )}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="hover:opacity-80 transition"
+              style={{ color: "var(--accent)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
+            >
+              Admin
+              <span className="tag tag-accent" style={{ fontSize: 8, padding: "1px 5px" }}>★</span>
             </Link>
           )}
         </nav>

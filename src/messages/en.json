@@ -53,7 +53,12 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "confirmMakePublic": "Make this recipe public? It will be visible to everyone.",
-    "confirmMakePrivate": "Make this recipe private? Only you will see it."
+    "confirmMakePrivate": "Make this recipe private? Only you will see it.",
+    "tabArchived": "Archived",
+    "noArchived": "No archived recipes",
+    "archive": "Archive",
+    "restore": "Restore",
+    "confirmArchive": "Archive this recipe? It won't appear in any listing and share links will be revoked. You can restore it anytime."
   },
   "calculator": {
     "title": "Calculator",
@@ -95,6 +100,8 @@
     "visibility": "Visibility",
     "public": "Public",
     "private": "Private",
+    "archivedBanner": "This recipe is archived — only you can see it. While archived it can't be edited or shared.",
+    "goToArchived": "View archived",
     "meatBase": "Meat base weight",
     "ingredients": "Ingredients",
     "addIngredient": "+ Add ingredient",

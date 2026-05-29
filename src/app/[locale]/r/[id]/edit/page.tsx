@@ -20,12 +20,13 @@ export default async function EditRecipePage({
 
   const { data: recipe } = await supabase
     .from("recipes")
-    .select("id, title, description, visibility, owner_id, current_version_id")
+    .select("id, title, description, visibility, owner_id, current_version_id, archived_at")
     .eq("id", id)
     .single();
 
   if (!recipe) notFound();
   if (recipe.owner_id !== user!.id) notFound();
+  if (recipe.archived_at) redirect({ href: `/r/${id}`, locale });
 
   const { data: version } = await supabase
     .from("recipe_versions")

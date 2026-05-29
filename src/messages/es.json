@@ -53,7 +53,12 @@
     "confirm": "Confirmar",
     "cancel": "Cancelar",
     "confirmMakePublic": "¿Hacer esta receta pública? Será visible para todos.",
-    "confirmMakePrivate": "¿Hacer esta receta privada? Solo vos podrás verla."
+    "confirmMakePrivate": "¿Hacer esta receta privada? Solo vos podrás verla.",
+    "tabArchived": "Archivadas",
+    "noArchived": "No tenés recetas archivadas",
+    "archive": "Archivar",
+    "restore": "Restaurar",
+    "confirmArchive": "¿Archivar esta receta? No aparecerá en ningún listado y los enlaces compartidos serán revocados. Podés restaurarla cuando quieras."
   },
   "calculator": {
     "title": "Calculadora",
@@ -95,6 +100,8 @@
     "visibility": "Visibilidad",
     "public": "Pública",
     "private": "Privada",
+    "archivedBanner": "Esta receta está archivada — solo vos la ves. Mientras esté archivada no se puede editar ni compartir.",
+    "goToArchived": "Ver archivadas",
     "meatBase": "Peso base de carne",
     "ingredients": "Ingredientes",
     "addIngredient": "+ Agregar ingrediente",

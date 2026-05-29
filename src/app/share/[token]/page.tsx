@@ -25,11 +25,11 @@ export default async function SharePage({
   // Load recipe (bypasses RLS via service role)
   const { data: recipe } = await supabase
     .from("recipes")
-    .select("id, title, description, current_version_id, profiles!owner_id(username, display_name)")
+    .select("id, title, description, current_version_id, archived_at, profiles!owner_id(username, display_name)")
     .eq("id", tokenRow.recipe_id)
     .single();
 
-  if (!recipe || !recipe.current_version_id) notFound();
+  if (!recipe || !recipe.current_version_id || recipe.archived_at) notFound();
 
   const { data: version } = await supabase
     .from("recipe_versions")

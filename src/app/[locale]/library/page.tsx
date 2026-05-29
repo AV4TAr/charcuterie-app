@@ -38,13 +38,13 @@ export default async function LibraryPage({
     .from("recipes")
     .select(`
       id, title, description, visibility, favorites_count, ratings_avg,
-      forked_from_recipe_id, current_version_id,
+      forked_from_recipe_id, current_version_id, archived_at,
       recipe_versions!current_version_id(version_number)
     `)
     .eq("owner_id", user!.id)
     .order("created_at", { ascending: false });
 
-  const recipes = (rawRecipes ?? []).map((r) => {
+  const allRecipes = (rawRecipes ?? []).map((r) => {
     const versionData = r.recipe_versions as unknown as { version_number: number } | null;
     return {
       id: r.id,
@@ -56,8 +56,12 @@ export default async function LibraryPage({
       current_version_id: r.current_version_id,
       version_number: versionData?.version_number ?? null,
       forked_from_recipe_id: r.forked_from_recipe_id,
+      archived_at: r.archived_at as string | null,
     };
   });
+
+  const recipes = allRecipes.filter((r) => !r.archived_at);
+  const archivedRecipes = allRecipes.filter((r) => r.archived_at);
 
   const { data: favRows = [] } = await supabase
     .from("favorites")
@@ -90,12 +94,14 @@ export default async function LibraryPage({
     tabPublic: t("tabPublic"),
     tabPrivate: t("tabPrivate"),
     tabFavorites: t("tabFavorites"),
+    tabArchived: t("tabArchived"),
     noRecipes: t("noRecipes"),
     noRecipesHint: t("noRecipesHint"),
     noPublic: t("noPublic"),
     noPrivate: t("noPrivate"),
     noFavorites: t("noFavorites"),
     noFavoritesHint: t("noFavoritesHint"),
+    noArchived: t("noArchived"),
     createFirst: t("createFirst"),
     browsePublic: t("browsePublic"),
     statsRecipes: t("statsRecipes"),
@@ -107,6 +113,9 @@ export default async function LibraryPage({
     cancel: t("cancel"),
     confirmMakePublic: t("confirmMakePublic"),
     confirmMakePrivate: t("confirmMakePrivate"),
+    archive: t("archive"),
+    restore: t("restore"),
+    confirmArchive: t("confirmArchive"),
   };
 
   return (
@@ -145,6 +154,7 @@ export default async function LibraryPage({
 
       <LibraryClient
         recipes={recipes}
+        archivedRecipes={archivedRecipes}
         favorites={favorites}
         t={tStrings}
         totalStars={totalStars}

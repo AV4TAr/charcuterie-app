@@ -27,11 +27,14 @@ export default async function RecipeDetailPage({
 
   const { data: recipe, error } = await supabase
     .from("recipes")
-    .select("id, title, description, visibility, owner_id, favorites_count, ratings_avg, ratings_count, forked_from_recipe_id, created_at, profiles!owner_id(username, display_name), current_version_id")
+    .select("id, title, description, visibility, owner_id, favorites_count, ratings_avg, ratings_count, forked_from_recipe_id, created_at, archived_at, profiles!owner_id(username, display_name), current_version_id")
     .eq("id", id)
     .single();
 
   if (error || !recipe || !recipe.current_version_id) notFound();
+
+  const isArchived = !!recipe.archived_at;
+  if (isArchived && user?.id !== recipe.owner_id) notFound();
 
   const { data: version } = await supabase
     .from("recipe_versions")
@@ -142,6 +145,28 @@ export default async function RecipeDetailPage({
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
+      {isArchived && (
+        <div
+          style={{
+            border: "1px solid var(--rule)",
+            borderRadius: 8,
+            padding: "12px 16px",
+            background: "var(--bg-2)",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontSize: 13, color: "var(--ink-2)", flex: 1 }}>
+            {t("archivedBanner")}
+          </span>
+          <Link href="/library" className="btn btn-sm">
+            {t("goToArchived")} →
+          </Link>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
@@ -169,7 +194,7 @@ export default async function RecipeDetailPage({
                 </Link>
               </span>
             )}
-            {isOwner && pendingProposalsCount > 0 && (
+            {isOwner && !isArchived && pendingProposalsCount > 0 && (
               <span className="tag tag-accent" style={{ fontSize: 9 }}>
                 {pendingProposalsCount === 1
                   ? tProposals("pendingProposals", { count: pendingProposalsCount })
@@ -178,40 +203,44 @@ export default async function RecipeDetailPage({
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <FavoriteButton
-            recipeId={recipe.id}
-            userId={user?.id ?? null}
-            initialIsFavorited={isFavorited}
-            initialCount={recipe.favorites_count ?? 0}
-          />
-          <ShareButton
-            recipeId={recipe.id}
-            isPublic={recipe.visibility === "public"}
-            isOwner={isOwner}
-            locale={locale}
-          />
-          {isOwner ? (
-            <Link href={`/r/${recipe.id}/edit`} className="btn btn-sm">
-              {t("edit")}
-            </Link>
-          ) : recipe.forked_from_recipe_id && user ? (
-            <Link href={`/proposals/new?from=${recipe.id}`} className="btn btn-sm">
-              {tProposals("proposeChanges")}
-            </Link>
-          ) : (
-            <ForkButton recipeId={recipe.id} userId={user?.id ?? null} />
-          )}
-        </div>
+        {!isArchived && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <FavoriteButton
+              recipeId={recipe.id}
+              userId={user?.id ?? null}
+              initialIsFavorited={isFavorited}
+              initialCount={recipe.favorites_count ?? 0}
+            />
+            <ShareButton
+              recipeId={recipe.id}
+              isPublic={recipe.visibility === "public"}
+              isOwner={isOwner}
+              locale={locale}
+            />
+            {isOwner ? (
+              <Link href={`/r/${recipe.id}/edit`} className="btn btn-sm">
+                {t("edit")}
+              </Link>
+            ) : recipe.forked_from_recipe_id && user ? (
+              <Link href={`/proposals/new?from=${recipe.id}`} className="btn btn-sm">
+                {tProposals("proposeChanges")}
+              </Link>
+            ) : (
+              <ForkButton recipeId={recipe.id} userId={user?.id ?? null} />
+            )}
+          </div>
+        )}
       </div>
 
-      <RatingStars
-        recipeId={recipe.id}
-        userId={user?.id ?? null}
-        initialUserRating={userRating}
-        avg={Number(recipe.ratings_avg ?? 0)}
-        count={recipe.ratings_count ?? 0}
-      />
+      {!isArchived && (
+        <RatingStars
+          recipeId={recipe.id}
+          userId={user?.id ?? null}
+          initialUserRating={userRating}
+          avg={Number(recipe.ratings_avg ?? 0)}
+          count={recipe.ratings_count ?? 0}
+        />
+      )}
 
       {ingredients.length > 0 ? (
         <WeightCalculator
@@ -239,14 +268,16 @@ export default async function RecipeDetailPage({
         </div>
       )}
 
-      <VersionHistory versions={versions} locale={locale} />
+      {!isArchived && <VersionHistory versions={versions} locale={locale} />}
 
-      <Comments
-        recipeId={recipe.id}
-        userId={user?.id ?? null}
-        initialComments={comments}
-        locale={locale}
-      />
+      {!isArchived && (
+        <Comments
+          recipeId={recipe.id}
+          userId={user?.id ?? null}
+          initialComments={comments}
+          locale={locale}
+        />
+      )}
     </div>
   );
 }

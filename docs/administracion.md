@@ -211,6 +211,8 @@ where id = '<user_uuid>';
 
 El `user_uuid` se obtiene de `auth.users` en el Supabase Dashboard. Este proceso requiere acceso al proyecto de Supabase, lo cual ya implica un nivel de confianza alto.
 
+Para verificar que sos admin, después del SQL refrescá `/library` (cualquier página logueada) — el link "Admin ★" aparece en el nav.
+
 ---
 
 ## Qué NO hace el panel de admin
@@ -224,20 +226,34 @@ El `user_uuid` se obtiene de `auth.users` en el Supabase Dashboard. Este proceso
 
 ## Roadmap de implementación
 
-### Fase 1 — Infraestructura
-1. Migración: `profiles.is_superadmin` + `admin_audit_log` + `user_plan_overrides`
-2. Helper `assertAdmin(userId)` en `src/lib/admin.ts`
-3. Helper `logAdminAction(adminId, action, targetId, details)` en `src/lib/admin.ts`
-4. Actualizar `canUseAI()` y `getUserPlan()` en `src/lib/subscription.ts` para respetar `user_plan_overrides`
+### Fase 1 — Infraestructura ✅ implementada
+1. ✅ Migración `20260529000000_admin_infra.sql`: `profiles.is_superadmin` + `admin_audit_log` + `user_plan_overrides`
+2. ✅ `assertAdmin()` / `isCurrentUserAdmin()` en `src/lib/admin.ts`
+3. ✅ `logAdminAction()` en `src/lib/admin.ts`
+4. ⏳ Integración con `getUserPlan()` / `canUseAI()` — pendiente hasta que `src/lib/subscription.ts` exista (monetization phase 1)
 
-### Fase 2 — UI básica
-1. `admin/layout.tsx` con verificación is_superadmin
-2. `admin/users/page.tsx` — lista paginada
-3. `admin/users/[id]/page.tsx` — detalle + acciones (cambiar plan, resetear trial, override)
+### Fase 2 — UI ✅ implementada
+1. ✅ `admin/layout.tsx` con verificación is_superadmin (`notFound()` si no cumple)
+2. ✅ `admin/page.tsx` — dashboard con métricas globales (users, recetas, favoritos, comentarios, forks, proposals abiertos, BYOK, overrides, superadmins, signups 7d)
+3. ✅ `admin/users/page.tsx` — lista paginada 50/página + search por username/display name + email desde auth.admin
+4. ✅ `admin/users/[id]/page.tsx` — detalle (cuenta + actividad + override form + audit log filtrado)
+5. ✅ `admin/audit/page.tsx` — log global paginado con filtro por acción
+6. ✅ Server actions `upsertPlanOverride` / `clearPlanOverride` con `assertAdmin()` + `logAdminAction()` antes de mutar
+7. ✅ Link "Admin ★" en site-nav solo visible si `is_superadmin = true`
 
-### Fase 3 — Dashboard y audit
-1. `admin/page.tsx` — métricas globales
-2. `admin/audit/page.tsx` — log paginado
+### Fase 3 — Pendiente
+1. Acciones de plan/usage que dependen de tablas de monetization:
+   - Cambiar plan real (necesita `subscriptions`)
+   - Resetear trial (`ai_usage.trial_used = 0`)
+   - Mostrar uso real de IA por usuario
+2. Ban / suspend de usuarios (definir flag `is_banned` en profiles)
+3. Métricas adicionales una vez `ai_usage` exista: llamadas hoy, top users por consumo
+4. Capturar `ip_address` en los logs (hoy queda en null — requiere headers de request en server actions)
+
+### Fase 4 — Hardening (opcional)
+1. IP allowlisting via Vercel Middleware o load balancer
+2. 2FA obligatorio para admins (Supabase soporta TOTP)
+3. Notificación de acceso desde IP nueva
 
 ---
 
